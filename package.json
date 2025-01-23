@@ -1,7 +1,7 @@
 {
-  "name": "luaparse",
+  "name": "luaparse-fivem",
   "version": "0.3.1",
-  "description": "A Lua parser in JavaScript",
+  "description": "A Lua parser in JavaScript - Edited by Dabz -  Modified by Sh4dow#8080",
   "keywords": [
     "ast",
     "lua",
@@ -11,13 +11,15 @@
   "homepage": "https://fstirlitz.github.io/luaparse/",
   "bugs": "https://github.com/fstirlitz/luaparse/issues",
   "license": "MIT",
-  "author": "Oskar Schöldström <public@oxy.fi> (http://www.oxy.fi/)",
+  "author": "Oskar Schöldström <public@oxy.fi> (http://www.oxy.fi/) |  Modified by Sh4dow#8080 | ItzDabbzz",
   "files": [
     "README.md",
     "LICENSE",
     "luaparse.js",
-    "bin/luaparse"
+    "bin/luaparse",
+    "luaparse.d.ts"
   ],
+  "types": "luaparse.d.ts",
   "main": "luaparse.js",
   "bin": {
     "luaparse": "bin/luaparse"
