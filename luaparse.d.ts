@@ -106,6 +106,10 @@ declare module "luaparse-fivem" {
 
 }
 
+export function parse(
+    code: string,
+    options?: Partial<ParseOptions>
+  ): ParseResult;
 export function parse(code: string, options: Partial<ParseOptions> & { wait: true }): Parser;
 export function parse(code: string, options?: Partial<ParseOptions>): ast.Chunk;
 export function parse(options?: Partial<ParseOptions>): Parser;
