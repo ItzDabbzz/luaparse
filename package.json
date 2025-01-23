@@ -48,6 +48,7 @@
     "plugin-error": "^1.0.1",
     "spec": "1.0.1",
     "testem": "^3.6.0",
-    "through2": "^4.0.2"
+    "through2": "^4.0.2",
+    "typescript": "^5.7.3"
   }
 }

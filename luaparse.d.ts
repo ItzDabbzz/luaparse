@@ -1,5 +1,6 @@
-import * as ast from "./ast";
-export * from "./ast";
+import * as ast from "./lib/ast.d";
+export * from "./lib/ast.d";
+
 interface BaseNode {
     type: string;
 }
