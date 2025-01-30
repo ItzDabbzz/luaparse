@@ -17,6 +17,7 @@
     "LICENSE",
     "luaparse.js",
     "bin/luaparse",
+    "lib/ast.d.ts",
     "luaparse.d.ts"
   ],
   "types": "luaparse.d.ts",
