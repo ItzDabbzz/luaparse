@@ -1,6 +1,6 @@
 {
   "name": "luaparse-fivem",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "A Lua parser in JavaScript - Fixed by ItzDabbzz -  Modified by Sh4dow#8080",
   "keywords": [
     "ast",
