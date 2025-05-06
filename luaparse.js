@@ -105,10 +105,12 @@
     // The variable's name will be passed as the only parameter
     onLocalDeclaration: null,
     // The version of Lua targeted by the parser (string; allowed values are
-    // '5.1', '5.2', '5.3', '5.4').
+    // '5.1', '5.2', '5.3', '5.4', 'FiveM5.4').
     luaVersion: "FiveM5.4",
     // Encoding mode: how to interpret code units higher than U+007F in input
     encodingMode: "none",
+    // Debug Mode: Outputs a log of all current inner workings
+    debug: false,
   });
 
   function encodeUTF8(codepoint, highMask) {
@@ -172,6 +174,17 @@
         toHex(m[0].charCodeAt(0), 4).toUpperCase()
       );
     };
+  }
+
+  function debugLog(message, data) {
+    if (!options.debug) return;
+
+    var prefix = '[luaparse:debug] ';
+    if (typeof data !== 'undefined') {
+      console.log(prefix + message, data);
+    } else {
+      console.log(prefix + message);
+    }
   }
 
   var encodingModes = {
@@ -702,6 +715,11 @@
     var message = sprintf.apply(null, slice.call(arguments, 1)),
       error,
       col;
+      if (options.debug) {
+        debugLog('ERROR: ' + message);
+        debugLog('Current token:', token);
+        debugLog('Current position: line ' + line + ', column ' + (index - lineStart + 1));
+      }
 
     if (token === null || typeof token.line === "undefined") {
       col = index - lineStart + 1;
@@ -817,6 +835,8 @@
   exports.lex = lex;
 
   function lex() {
+    if (options.debug) debugLog('Lexing at index ' + index + ', line ' + line);
+
     skipWhiteSpace();
 
     // Skip comments beginning with --
@@ -839,7 +859,8 @@
       }
     }
 
-    if (index >= length)
+    if (index >= length) {
+      if (options.debug) debugLog('Reached EOF');
       return {
         type: EOF,
         value: "<eof>",
@@ -847,6 +868,7 @@
         lineStart: lineStart,
         range: [index, index],
       };
+    }
 
     var charCode = input.charCodeAt(index),
       next = input.charCodeAt(index + 1);
@@ -1823,6 +1845,7 @@
   function createScope() {
     var scope = scopes[scopeDepth++].slice();
     scopes.push(scope);
+    if (options.debug) debugLog('Created new scope at depth ' + scopeDepth);
     if (options.onCreateScope) options.onCreateScope();
   }
 
@@ -1830,6 +1853,7 @@
   function destroyScope() {
     var scope = scopes.pop();
     --scopeDepth;
+    if (options.debug) debugLog('Destroyed scope, new depth: ' + scopeDepth);
     if (options.onDestroyScope) options.onDestroyScope();
   }
 
@@ -1842,6 +1866,7 @@
 
   // Add identifier to the current scope
   function scopeIdentifier(node) {
+    if (options.debug) debugLog('Adding identifier to scope: ' + node.name);
     scopeIdentifierName(node.name);
     attachScope(node, true);
   }
@@ -2157,6 +2182,7 @@
   //          | functioncall | ';'
 
   function parseStatement(flowContext) {
+    if (options.debug) debugLog('Parsing statement, current token: ' + token.value);
     markLocation();
 
     if (Punctuator === token.type) {
@@ -2814,7 +2840,15 @@
   //
 
   function parseExpression(flowContext) {
+    if (options.debug) debugLog('Parsing expression');
     var expression = parseSubExpression(0, flowContext);
+    if (options.debug) {
+      if (expression) {
+        debugLog('Expression result:', { type: expression.type });
+      } else {
+        debugLog('No expression found');
+      }
+    }
     return expression;
   }
 
@@ -3212,6 +3246,12 @@
     globals = [];
     locations = [];
 
+    if (options.debug) {
+      debugLog('Parser initialized with options:', options);
+      debugLog('Lua version: ' + options.luaVersion);
+      debugLog('Input length: ' + input.length + ' characters');
+    }
+
     if (
       !Object.prototype.hasOwnProperty.call(versionFeatures, options.luaVersion)
     ) {
@@ -3235,7 +3275,12 @@
     encodingMode = encodingModes[options.encodingMode];
 
     if (options.comments) comments = [];
-    if (!options.wait) return end();
+    if (!options.wait) {
+      if (options.debug) debugLog('Starting parse immediately');
+      return end();
+    }
+
+    if (options.debug) debugLog('Waiting for more input before parsing');
     return exports;
   }
 
