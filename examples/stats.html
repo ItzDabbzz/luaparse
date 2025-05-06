@@ -1,118 +1,412 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="utf-8">
-  <title>Luaparse</title>
+  <title>Luaparse Stats</title>
   <style>
+    :root {
+      /* Catppuccin Mocha palette */
+      --ctp-base: #1e1e2e;
+      --ctp-mantle: #181825;
+      --ctp-crust: #11111b;
+      --ctp-text: #cdd6f4;
+      --ctp-subtext0: #a6adc8;
+      --ctp-subtext1: #bac2de;
+      --ctp-surface0: #313244;
+      --ctp-surface1: #45475a;
+      --ctp-surface2: #585b70;
+      --ctp-overlay0: #6c7086;
+      --ctp-overlay1: #7f849c;
+      --ctp-overlay2: #9399b2;
+      --ctp-blue: #89b4fa;
+      --ctp-lavender: #b4befe;
+      --ctp-sapphire: #74c7ec;
+      --ctp-sky: #89dceb;
+      --ctp-teal: #94e2d5;
+      --ctp-green: #a6e3a1;
+      --ctp-yellow: #f9e2af;
+      --ctp-peach: #fab387;
+      --ctp-maroon: #eba0ac;
+      --ctp-red: #f38ba8;
+      --ctp-mauve: #cba6f7;
+      --ctp-pink: #f5c2e7;
+      --ctp-flamingo: #f2cdcd;
+      --ctp-rosewater: #f5e0dc;
+    }
+
     body {
-      font-family: arial;
-      max-width: 1000px;
-      margin: 1em auto;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background-color: var(--ctp-base);
+      color: var(--ctp-text);
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+      box-sizing: border-box;
     }
-    #editor {
-      width: 50%;
-      height: 500px;
-      position: relative;
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
     }
-    #tree {
-      padding-left: 2%;
-      font-size: 11px;
+
+    h1 {
+      color: var(--ctp-lavender);
+      margin-top: 0;
+      font-size: 24px;
+      margin-bottom: 20px;
     }
-    #editor, #tree {
-      float: left;
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
     }
-    .ygtvlabel {
-      white-space: nowrap;
+
+    button {
+      background-color: var(--ctp-surface1);
+      color: var(--ctp-text);
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background-color 0.2s;
     }
-    #parse, #analyze { display: none; }
-    th { text-align: left; }
-    table { margin-bottom: 2em; }
-    td { padding-right: 2em; }
+
+    button:hover {
+      background-color: var(--ctp-surface2);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    #results {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    table {
+      background-color: var(--ctp-mantle);
+      border-radius: 8px;
+      border-collapse: separate;
+      border-spacing: 0;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+      margin-bottom: 20px;
+      width: calc(50% - 10px);
+    }
+
+    caption {
+      background-color: var(--ctp-surface0);
+      color: var(--ctp-lavender);
+      font-weight: bold;
+      padding: 10px;
+      text-align: left;
+      font-size: 16px;
+    }
+
+    th {
+      text-align: left;
+      padding: 10px;
+      background-color: var(--ctp-surface0);
+      color: var(--ctp-subtext0);
+      font-weight: normal;
+    }
+
+    td {
+      padding: 8px 10px;
+      border-top: 1px solid var(--ctp-surface0);
+    }
+
+    tbody tr:hover {
+      background-color: var(--ctp-surface0);
+    }
+
+    tfoot {
+      font-weight: bold;
+    }
+
+    tfoot th,
+    tfoot td {
+      border-top: 2px solid var(--ctp-surface2);
+      background-color: var(--ctp-surface0);
+    }
+
+    .status {
+      margin-bottom: 15px;
+      color: var(--ctp-subtext0);
+      font-style: italic;
+    }
+
+    .file-info {
+      margin-bottom: 15px;
+      color: var(--ctp-sky);
+    }
+
+    /* Custom scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--ctp-surface0);
+      border-radius: 8px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--ctp-overlay0);
+      border-radius: 8px;
+      transition: background 0.2s ease;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--ctp-overlay1);
+    }
+
+    ::-webkit-scrollbar-corner {
+      background: var(--ctp-surface0);
+    }
+
+    /* Firefox scrollbar styling */
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: var(--ctp-overlay0) var(--ctp-surface0);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      table {
+        width: 100%;
+      }
+    }
+
+    #perf-box {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-color: var(--ctp-surface0);
+      border: 1px solid var(--ctp-surface1);
+      border-radius: 8px;
+      padding: 10px 14px;
+      max-height: 300px;
+      width: 280px;
+      overflow-y: auto;
+      color: var(--ctp-subtext1);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      z-index: 999;
+    }
+
+    #perf-box h2 {
+      margin: 0 0 10px 0;
+      font-size: 16px;
+      color: var(--ctp-lavender);
+    }
+
+    .perf-entry {
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 8px;
+      border-bottom: 1px solid var(--ctp-surface1);
+      padding-bottom: 6px;
+    }
   </style>
 </head>
+
 <body>
-  <button id="parse">Parse</button>
-  <button id="analyze">Analyze</button>
+  <div class="container">
+    <h1>Luaparse Statistics</h1>
 
-  <div id="results"></div>
-<script src="../luaparse.js"></script>
-<script src="js/walker.js"></script>
-<script src="https://code.jquery.com/jquery-1.8.3.min.js"></script>
-<script>
-  (function(window, $, luaparse, walker) {
-    var path = window.location.href.replace(/([^\/]+)\/([^\/]+)$/, '')
-      , script = path + 'benchmarks/lib/ParseLua.lua'
-      , ast
-      , source;
+    <div class="controls">
+      <button id="load-parse-lua">Load ParseLua.lua</button>
+      <button id="load-items-lua">Load items.lua</button>
+      <button id="load-items-basic-lua">Load items.basic.lua</button>
+      <button id="parse" disabled>Parse</button>
+      <button id="analyze" disabled>Analyze</button>
+    </div>
 
-    function sortStats(stats) {
-      var sortable = [];
-      for (var key in stats) if (stats.hasOwnProperty(key)) {
-        sortable.push({ type: key, count: stats[key] });
-      }
-      sortable.sort(function(a, b) { return b.count - a.count; });
-      return sortable;
-    }
+    <div class="status" id="status">Ready to load a file...</div>
+    <div class="file-info" id="file-info"></div>
 
-    function createTable(name, stats) {
-      var caption = '<caption>' + name + '</caption>'
-        , thead = '<thead><tr><th>Type</th><th>Count</th></tr></thead>'
-        , tbody = '<tbody>'
-        , total = 0
-        , tfoot, res, i;
+    <div id="results"></div>
+  </div>
+  <div id="perf-box">
+    <h2>Performance Stats</h2>
+    <div id="perf-history"></div>
+  </div>
 
-      for (i = 0; i < stats.length; i++) {
-        res = stats[i];
-        total += res.count;
-        tbody += '<tr><td>' + res.type + '</td><td>' + res.count + '</td></tr>';
-      }
+  <script src="../dist/luaparse.js"></script>
+  <script src="js/walker.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    (function (window, $, lp, walker) {
+      var path = window.location.href.replace(/([^\/]+)\/([^\/]+)$/, '')
+        , parseLuaScript = path + 'benchmarks/lib/ParseLua.lua'
+        , itemsLuaScript = path + 'benchmarks/lib/items.lua'
+        , itemsBLuaScript = path + 'benchmarks/lib/items.basic.lua'
+        , ast
+        , source
+        , currentFile;
 
-      tbody += '</tbody>';
-
-      tfoot = '<tfoot><tr><th></th><th>' + total +'</th></tr></tfoot>';
-
-      return '<table>' + caption + thead + tbody + tfoot + '</table>';
-    }
-
-    $.get(script, function(data) {
-      source = data;
-      $('#parse').show();
-    });
-
-    $('#parse').on('click', function() {
-      ast = luaparse.parse(source);
-      $('#analyze').show();
-    });
-
-    $('#analyze').on('click', function() {
-        var nodes = {}
-          , expressions = {};
-
-      function increment(stats, type) {
-        if (!stats[type]) stats[type] = 1;
-        else stats[type]++;
+      function updateStatus(message) {
+        $('#status').text(message);
       }
 
-      walker(ast, function(node) {
-        increment(nodes, node.type);
+      function updateFileInfo(filename, size) {
+        if (filename) {
+          $('#file-info').text(`File: ${filename} (${formatSize(size)})`).show();
+        } else {
+          $('#file-info').hide();
+        }
+      }
 
-        switch (node.type) {
-          case 'BinaryExpression':
-          case 'LogicalExpression':
-          case 'UnaryExpression':
-            increment(expressions, node.operator);
-            break;
+      function formatSize(bytes) {
+        if (bytes < 1024) return bytes + ' bytes';
+        else if (bytes < 1048576) return (bytes / 1024).toFixed(2) + ' KB';
+        else return (bytes / 1048576).toFixed(2) + ' MB';
+      }
+
+      function sortStats(stats) {
+        var sortable = [];
+        for (var key in stats) if (stats.hasOwnProperty(key)) {
+          sortable.push({ type: key, count: stats[key] });
+        }
+        sortable.sort(function (a, b) { return b.count - a.count; });
+        return sortable;
+      }
+
+      function createTable(name, stats) {
+        var caption = '<caption>' + name + '</caption>'
+          , thead = '<thead><tr><th>Type</th><th>Count</th></tr></thead>'
+          , tbody = '<tbody>'
+          , total = 0
+          , tfoot, res, i;
+
+        for (i = 0; i < stats.length; i++) {
+          res = stats[i];
+          total += res.count;
+          tbody += '<tr><td>' + res.type + '</td><td>' + res.count + '</td></tr>';
+        }
+
+        tbody += '</tbody>';
+
+        tfoot = '<tfoot><tr><th>Total</th><th>' + total + '</th></tr></tfoot>';
+
+        return '<table>' + caption + thead + tbody + tfoot + '</table>';
+      }
+
+      let perfData = { file: '', load: 0, parse: 0, analyze: 0 };
+
+      function appendPerfEntry(data) {
+        const entry = `
+    <div class="perf-entry">
+      <strong>${data.file}</strong><br>
+      Load: ${data.load} ms<br>
+      Parse: ${data.parse} ms<br>
+      Analyze: ${data.analyze} ms
+    </div>
+  `;
+        $('#perf-history').prepend(entry);
+      }
+
+      function loadFile(url, filename) {
+        updateStatus('Loading ' + filename + '...');
+        $('#parse').prop('disabled', true);
+        $('#analyze').prop('disabled', true);
+
+        const start = performance.now();
+
+        $.get(url, function (data) {
+          const end = performance.now();
+          const loadTime = (end - start).toFixed(2);
+
+          source = data;
+          currentFile = filename;
+          perfData = { file: filename, load: loadTime, parse: 0, analyze: 0 };
+
+          updateStatus(`File loaded in ${loadTime} ms. Ready to parse.`);
+          updateFileInfo(filename, data.length);
+          $('#parse').prop('disabled', false);
+        }).fail(function () {
+          updateStatus('Error loading file: ' + filename);
+        });
+      }
+
+      $('#load-parse-lua').on('click', function () {
+        loadFile(parseLuaScript, 'ParseLua.lua');
+      });
+
+      $('#load-items-lua').on('click', function () {
+        loadFile(itemsLuaScript, 'items.lua');
+      });
+
+      $('#load-items-basic-lua').on('click', function () {
+        loadFile(itemsBLuaScript, 'items.basic.lua');
+      });
+
+      $('#parse').on('click', function () {
+        updateStatus('Parsing ' + currentFile + '...');
+        const start = performance.now();
+        try {
+          ast = luaparse.parse(source, { debug: false, luaVersion: "FiveM5.4" });
+          const end = performance.now();
+          const parseTime = (end - start).toFixed(2);
+          perfData.parse = parseTime;
+
+          updateStatus(`Parsing complete in ${parseTime} ms. Ready to analyze.`);
+          $('#analyze').prop('disabled', false);
+        } catch (e) {
+          updateStatus('Error parsing: ' + e.message);
         }
       });
 
-      expressions = sortStats(expressions);
-      nodes = sortStats(nodes);
+      $('#analyze').on('click', function () {
+        updateStatus('Analyzing AST...');
+        const start = performance.now();
 
-      var $results = $('#results');
-      $results.append(createTable('Node types', nodes));
-      $results.append(createTable('Operators', expressions));
-    });
-  }(this, this.jQuery, this.luaparse, this.walker));
-</script>
+        var nodes = {}, expressions = {};
+
+        function increment(stats, type) {
+          if (!stats[type]) stats[type] = 1;
+          else stats[type]++;
+        }
+
+        walker(ast, function (node) {
+          increment(nodes, node.type);
+          switch (node.type) {
+            case 'BinaryExpression':
+            case 'LogicalExpression':
+            case 'UnaryExpression':
+              increment(expressions, node.operator);
+              break;
+          }
+        });
+
+        const end = performance.now();
+        const analyzeTime = (end - start).toFixed(2);
+        perfData.analyze = analyzeTime;
+
+        expressions = sortStats(expressions);
+        nodes = sortStats(nodes);
+
+        var $results = $('#results');
+        $results.empty();
+        $results.append(createTable('Node Types', nodes));
+        $results.append(createTable('Operators', expressions));
+
+        updateStatus(`Analysis complete in ${analyzeTime} ms.`);
+        appendPerfEntry(perfData);
+      });
+
+      // Initialize
+      updateStatus('Ready to load a file...');
+
+    }(this, this.jQuery, this.luaparse, this.walker));
+  </script>
 </body>
+
 </html>
