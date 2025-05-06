@@ -1,9 +1,12 @@
 /* global exports:true, module:true, require:true, define:true, global:true */
 
-(function (root, name, factory) {
+((root, name, factory) => {
+  // biome-ignore lint/suspicious/noRedundantUseStrict: <explanation>
   "use strict";
 
   // Used to determine if values are of the language type `Object`
+  // biome-ignore lint/style/noVar: <explanation>
+  // biome-ignore lint/style/useSingleVarDeclarator: <explanation>
   var objectTypes = {
     function: true,
     object: true,
@@ -26,9 +29,10 @@
   if (
     freeGlobal &&
     (freeGlobal.global === freeGlobal ||
-      /* istanbul ignore next */ freeGlobal.window === freeGlobal ||
-      /* istanbul ignore next */ freeGlobal.self === freeGlobal)
+			/* istanbul ignore next */ freeGlobal.window === freeGlobal ||
+			/* istanbul ignore next */ freeGlobal.self === freeGlobal)
   ) {
+    // biome-ignore lint/style/noParameterAssign: <explanation>
     root = freeGlobal;
   }
 
@@ -37,8 +41,8 @@
   /* istanbul ignore if */
   if (
     typeof define === "function" &&
-    /* istanbul ignore next */ typeof define.amd === "object" &&
-    /* istanbul ignore next */ define.amd
+		/* istanbul ignore next */ typeof define.amd === "object" &&
+		/* istanbul ignore next */ define.amd
   ) {
     // defined as an anonymous module.
     define(["exports"], factory);
@@ -57,14 +61,17 @@
   }
   // in a browser or Rhino
   else {
+    // biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
     factory((root[name] = {}));
   }
-})(this, "fivem-luaparse", function (exports) {
-  "use strict";
-
+})(this, "luaparse", (exports) => {
   exports.version = "1.0.3";
 
-  var input, options, length, features, encodingMode;
+  let input;
+  let options;
+  let length;
+  let features;
+  let encodingMode;
 
   const CompoundOperators = [
     "+=",
@@ -80,7 +87,8 @@
 
   // Options can be set either globally on the parser object through
   // defaultOptions, or during the parse call.
-  var defaultOptions = (exports.defaultOptions = {
+  // biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
+  const defaultOptions = (exports.defaultOptions = {
     // Explicitly tell the parser when the input ends.
     wait: false,
     // Store comments as an array in the chunk object.
@@ -118,60 +126,66 @@
 
     if (codepoint < 0x80) {
       return String.fromCharCode(codepoint);
+      // biome-ignore lint/style/noUselessElse: <explanation>
     } else if (codepoint < 0x800) {
       return String.fromCharCode(
         highMask | 0xc0 | (codepoint >> 6),
-        highMask | 0x80 | (codepoint & 0x3f)
+        highMask | 0x80 | (codepoint & 0x3f),
       );
+      // biome-ignore lint/style/noUselessElse: <explanation>
     } else if (codepoint < 0x10000) {
       return String.fromCharCode(
         highMask | 0xe0 | (codepoint >> 12),
         highMask | 0x80 | ((codepoint >> 6) & 0x3f),
-        highMask | 0x80 | (codepoint & 0x3f)
+        highMask | 0x80 | (codepoint & 0x3f),
       );
+      // biome-ignore lint/style/noUselessElse: <explanation>
     } else if (codepoint < 0x200000) {
       return String.fromCharCode(
         highMask | 0xf0 | (codepoint >> 18),
         highMask | 0x80 | ((codepoint >> 12) & 0x3f),
         highMask | 0x80 | ((codepoint >> 6) & 0x3f),
-        highMask | 0x80 | (codepoint & 0x3f)
+        highMask | 0x80 | (codepoint & 0x3f),
       );
+      // biome-ignore lint/style/noUselessElse: <explanation>
     } else if (codepoint < 0x4000000) {
       return String.fromCharCode(
         highMask | 0xf8 | (codepoint >> 24),
         highMask | 0x80 | ((codepoint >> 18) & 0x3f),
         highMask | 0x80 | ((codepoint >> 12) & 0x3f),
         highMask | 0x80 | ((codepoint >> 6) & 0x3f),
-        highMask | 0x80 | (codepoint & 0x3f)
+        highMask | 0x80 | (codepoint & 0x3f),
       );
-    } /* istanbul ignore else */ else if (codepoint <= 0x7fffffff) {
+      // biome-ignore lint/style/noUselessElse: <explanation>
+    } /* istanbul ignore else */  /* istanbul ignore else */else if (codepoint <= 0x7fffffff) {
       return String.fromCharCode(
         highMask | 0xfc | (codepoint >> 30),
         highMask | 0x80 | ((codepoint >> 24) & 0x3f),
         highMask | 0x80 | ((codepoint >> 18) & 0x3f),
         highMask | 0x80 | ((codepoint >> 12) & 0x3f),
         highMask | 0x80 | ((codepoint >> 6) & 0x3f),
-        highMask | 0x80 | (codepoint & 0x3f)
+        highMask | 0x80 | (codepoint & 0x3f),
       );
+      // biome-ignore lint/style/noUselessElse: <explanation>
     } else {
       throw new Error("Should not happen");
     }
   }
 
   function toHex(num, digits) {
-    var result = num.toString(16);
-    while (result.length < digits) result = "0" + result;
+    let result = num.toString(16);
+    while (result.length < digits) result = `0${result}`;
     return result;
   }
 
   function checkChars(rx) {
-    return function (s) {
-      var m = rx.exec(s);
+    return (s) => {
+      const m = rx.exec(s);
       if (!m) return s;
       raise(
         null,
         errors.invalidCodeUnit,
-        toHex(m[0].charCodeAt(0), 4).toUpperCase()
+        toHex(m[0].charCodeAt(0), 4).toUpperCase(),
       );
     };
   }
@@ -179,69 +193,61 @@
   function debugLog(message, data) {
     if (!options.debug) return;
 
-    var prefix = '[luaparse:debug] ';
-    if (typeof data !== 'undefined') {
+    const prefix = "[luaparse:debug] ";
+    if (typeof data !== "undefined") {
       console.log(prefix + message, data);
     } else {
       console.log(prefix + message);
     }
   }
 
-  var encodingModes = {
+  const encodingModes = {
     // `pseudo-latin1` encoding mode: assume the input was decoded with the latin1 encoding
     // WARNING: latin1 does **NOT** mean cp1252 here like in the bone-headed WHATWG standard;
     // it means true ISO/IEC 8859-1 identity-mapped to Basic Latin and Latin-1 Supplement blocks
     "pseudo-latin1": {
+      // biome-ignore lint/suspicious/noControlCharactersInRegex: <explanation>
       fixup: checkChars(/[^\x00-\xff]/),
-      encodeByte: function (value) {
+      encodeByte: (value) => {
         if (value === null) return "";
         return String.fromCharCode(value);
       },
-      encodeUTF8: function (codepoint) {
-        return encodeUTF8(codepoint);
-      },
+      encodeUTF8: (codepoint) => encodeUTF8(codepoint),
     },
 
     // `x-user-defined` encoding mode: assume the input was decoded with the WHATWG `x-user-defined` encoding
     "x-user-defined": {
+      // biome-ignore lint/suspicious/noControlCharactersInRegex: <explanation>
       fixup: checkChars(/[^\x00-\x7f\uf780-\uf7ff]/),
-      encodeByte: function (value) {
+      encodeByte: (value) => {
         if (value === null) return "";
         if (value >= 0x80) return String.fromCharCode(value | 0xf700);
         return String.fromCharCode(value);
       },
-      encodeUTF8: function (codepoint) {
-        return encodeUTF8(codepoint, 0xf700);
-      },
+      encodeUTF8: (codepoint) => encodeUTF8(codepoint, 0xf700),
     },
 
     // `none` encoding mode: disregard intrepretation of string literals, leave identifiers as-is
     none: {
       discardStrings: true,
-      fixup: function (s) {
-        return s;
-      },
-      encodeByte: function (value) {
-        return "";
-      },
-      encodeUTF8: function (codepoint) {
-        return "";
-      },
+      fixup: (s) => s,
+      encodeByte: () => "",
+      encodeUTF8: () => "",
     },
   };
 
   // The available tokens expressed as enum flags so they can be checked with
   // bitwise operations.
 
-  var EOF = 1,
-    StringLiteral = 2,
-    Keyword = 4,
-    Identifier = 8,
-    NumericLiteral = 16,
-    Punctuator = 32,
-    BooleanLiteral = 64,
-    NilLiteral = 128,
-    VarargLiteral = 256;
+  const EOF = 1;
+  const StringLiteral = 2;
+  const Keyword = 4;
+  const Identifier = 8;
+  const NumericLiteral = 16;
+  const Punctuator = 32;
+  const BooleanLiteral = 64;
+  const NilLiteral = 128;
+  const VarargLiteral = 256;
 
   exports.tokenTypes = {
     EOF: EOF,
@@ -258,7 +264,8 @@
   // As this parser is a bit different from luas own, the error messages
   // will be different in some situations.
 
-  var errors = (exports.errors = {
+  // biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
+  const errors = (exports.errors = {
     unexpected: "unexpected %1 '%2' near '%3'",
     unexpectedEOF: "unexpected symbol near '<eof>'",
     expected: "'%1' expected near '%2'",
@@ -291,185 +298,140 @@
   // The default AST structure is inspired by the Mozilla Parser API but can
   // easily be customized by overriding these functions.
 
-  var ast = (exports.ast = {
-    labelStatement: function (label) {
-      return {
-        type: "LabelStatement",
-        label: label,
-      };
-    },
+  // biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
+  const ast = (exports.ast = {
+    labelStatement: (label) => ({
+      type: "LabelStatement",
+      label: label,
+    }),
 
-    breakStatement: function () {
-      return {
-        type: "BreakStatement",
-      };
-    },
+    breakStatement: () => ({
+      type: "BreakStatement",
+    }),
 
-    gotoStatement: function (label) {
-      return {
-        type: "GotoStatement",
-        label: label,
-      };
-    },
+    gotoStatement: (label) => ({
+      type: "GotoStatement",
+      label: label,
+    }),
 
-    returnStatement: function (args) {
-      return {
-        type: "ReturnStatement",
-        arguments: args,
-      };
-    },
+    returnStatement: (args) => ({
+      type: "ReturnStatement",
+      arguments: args,
+    }),
 
-    ifStatement: function (clauses) {
-      return {
-        type: "IfStatement",
-        clauses: clauses,
-      };
-    },
-    ifClause: function (condition, body) {
-      return {
-        type: "IfClause",
-        condition: condition,
-        body: body,
-      };
-    },
-    elseifClause: function (condition, body) {
-      return {
-        type: "ElseifClause",
-        condition: condition,
-        body: body,
-      };
-    },
-    elseClause: function (body) {
-      return {
-        type: "ElseClause",
-        body: body,
-      };
-    },
+    ifStatement: (clauses) => ({
+      type: "IfStatement",
+      clauses: clauses,
+    }),
+    ifClause: (condition, body) => ({
+      type: "IfClause",
+      condition: condition,
+      body: body,
+    }),
+    elseifClause: (condition, body) => ({
+      type: "ElseifClause",
+      condition: condition,
+      body: body,
+    }),
+    elseClause: (body) => ({
+      type: "ElseClause",
+      body: body,
+    }),
 
-    whileStatement: function (condition, body) {
-      return {
-        type: "WhileStatement",
-        condition: condition,
-        body: body,
-      };
-    },
+    whileStatement: (condition, body) => ({
+      type: "WhileStatement",
+      condition: condition,
+      body: body,
+    }),
 
-    doStatement: function (body) {
-      return {
-        type: "DoStatement",
-        body: body,
-      };
-    },
+    doStatement: (body) => ({
+      type: "DoStatement",
+      body: body,
+    }),
 
-    repeatStatement: function (condition, body) {
-      return {
-        type: "RepeatStatement",
-        condition: condition,
-        body: body,
-      };
-    },
+    repeatStatement: (condition, body) => ({
+      type: "RepeatStatement",
+      condition: condition,
+      body: body,
+    }),
 
-    localStatement: function (variables, init) {
-      return {
-        type: "LocalStatement",
-        variables: variables,
-        init: init,
-      };
-    },
+    localStatement: (variables, init) => ({
+      type: "LocalStatement",
+      variables: variables,
+      init: init,
+    }),
 
-    localOperatorStatement: function (operator, variables, init) {
-      return {
-        type: "LocalOperatorStatement",
-        operator: operator,
-        variables: variables,
-        init: init,
-      };
-    },
+    localOperatorStatement: (operator, variables, init) => ({
+      type: "LocalOperatorStatement",
+      operator: operator,
+      variables: variables,
+      init: init,
+    }),
 
-    assignmentStatement: function (variables, init) {
-      return {
-        type: "AssignmentStatement",
-        variables: variables,
-        init: init,
-      };
-    },
+    assignmentStatement: (variables, init) => ({
+      type: "AssignmentStatement",
+      variables: variables,
+      init: init,
+    }),
 
-    compoundAssignmentStatement: function (operator, variables, init) {
-      return {
-        type: "CompoundAssignmentStatement",
-        operator,
-        variables: variables,
-        init: init,
-      };
-    },
+    compoundAssignmentStatement: (operator, variables, init) => ({
+      type: "CompoundAssignmentStatement",
+      operator,
+      variables: variables,
+      init: init,
+    }),
 
-    callStatement: function (expression) {
-      return {
-        type: "CallStatement",
-        expression: expression,
-      };
-    },
+    callStatement: (expression) => ({
+      type: "CallStatement",
+      expression: expression,
+    }),
 
-    functionStatement: function (identifier, parameters, isLocal, body) {
-      return {
-        type: "FunctionDeclaration",
-        identifier: identifier,
-        isLocal: isLocal,
-        parameters: parameters,
-        body: body,
-      };
-    },
+    functionStatement: (identifier, parameters, isLocal, body) => ({
+      type: "FunctionDeclaration",
+      identifier: identifier,
+      isLocal: isLocal,
+      parameters: parameters,
+      body: body,
+    }),
 
-    forNumericStatement: function (variable, start, end, step, body) {
-      return {
-        type: "ForNumericStatement",
-        variable: variable,
-        start: start,
-        end: end,
-        step: step,
-        body: body,
-      };
-    },
+    forNumericStatement: (variable, start, end, step, body) => ({
+      type: "ForNumericStatement",
+      variable: variable,
+      start: start,
+      end: end,
+      step: step,
+      body: body,
+    }),
 
-    forGenericStatement: function (variables, iterators, body) {
-      return {
-        type: "ForGenericStatement",
-        variables: variables,
-        iterators: iterators,
-        body: body,
-      };
-    },
+    forGenericStatement: (variables, iterators, body) => ({
+      type: "ForGenericStatement",
+      variables: variables,
+      iterators: iterators,
+      body: body,
+    }),
 
-    chunk: function (body) {
-      return {
-        type: "Chunk",
-        body: body,
-      };
-    },
+    chunk: (body) => ({
+      type: "Chunk",
+      body: body,
+    }),
 
-    attribute: function (name) {
-      return {
-        type: "Attribute",
-        name: name,
-      };
-    },
+    attribute: (name) => ({
+      type: "Attribute",
+      name: name,
+    }),
 
-    identifier: function (name) {
-      return {
-        type: "Identifier",
-        name: name,
-      };
-    },
+    identifier: (name) => ({
+      type: "Identifier",
+      name: name,
+    }),
 
-    identifierWithAttribute: function (name, attribute) {
-      return {
-        type: "IdentifierWithAttribute",
-        name: name,
-        attribute: attribute,
-      };
-    },
+    identifierWithAttribute: (name, attribute) => ({
+      type: "IdentifierWithAttribute",
+      name: name,
+      attribute: attribute,
+    }),
 
-    literal: function (type, value, raw) {
+    literal: (type, value, raw) => {
       type =
         type === StringLiteral
           ? "StringLiteral"
@@ -488,41 +450,31 @@
       };
     },
 
-    tableKey: function (key, value) {
-      return {
-        type: "TableKey",
-        key: key,
-        value: value,
-      };
-    },
-    tableKeyString: function (key, value) {
-      return {
-        type: "TableKeyString",
-        key: key,
-        value: value,
-      };
-    },
-    tableValue: function (value) {
-      return {
-        type: "TableValue",
-        value: value,
-      };
-    },
-    tableSetValue: function (value) {
-      return {
-        type: "TableSetValue",
-        value: value,
-      };
-    },
+    tableKey: (key, value) => ({
+      type: "TableKey",
+      key: key,
+      value: value,
+    }),
+    tableKeyString: (key, value) => ({
+      type: "TableKeyString",
+      key: key,
+      value: value,
+    }),
+    tableValue: (value) => ({
+      type: "TableValue",
+      value: value,
+    }),
+    tableSetValue: (value) => ({
+      type: "TableSetValue",
+      value: value,
+    }),
 
-    tableConstructorExpression: function (fields) {
-      return {
-        type: "TableConstructorExpression",
-        fields: fields,
-      };
-    },
-    binaryExpression: function (operator, left, right) {
-      var type =
+    tableConstructorExpression: (fields) => ({
+      type: "TableConstructorExpression",
+      fields: fields,
+    }),
+    binaryExpression: (operator, left, right) => {
+      const type =
         "and" === operator || "or" === operator
           ? "LogicalExpression"
           : "BinaryExpression";
@@ -534,70 +486,54 @@
         right: right,
       };
     },
-    unaryExpression: function (operator, argument) {
-      return {
-        type: "UnaryExpression",
-        operator: operator,
-        argument: argument,
-      };
-    },
-    memberExpression: function (base, indexer, identifier) {
-      return {
-        type: "MemberExpression",
-        indexer: indexer,
-        identifier: identifier,
-        base: base,
-      };
-    },
+    unaryExpression: (operator, argument) => ({
+      type: "UnaryExpression",
+      operator: operator,
+      argument: argument,
+    }),
+    memberExpression: (base, indexer, identifier) => ({
+      type: "MemberExpression",
+      indexer: indexer,
+      identifier: identifier,
+      base: base,
+    }),
 
-    indexExpression: function (base, index) {
-      return {
-        type: "IndexExpression",
-        base: base,
-        index: index,
-      };
-    },
+    indexExpression: (base, index) => ({
+      type: "IndexExpression",
+      base: base,
+      index: index,
+    }),
 
-    callExpression: function (base, args) {
-      return {
-        type: "CallExpression",
-        base: base,
-        arguments: args,
-      };
-    },
+    callExpression: (base, args) => ({
+      type: "CallExpression",
+      base: base,
+      arguments: args,
+    }),
 
-    tableCallExpression: function (base, args) {
-      return {
-        type: "TableCallExpression",
-        base: base,
-        arguments: args,
-        argument: args,
-      };
-    },
+    tableCallExpression: (base, args) => ({
+      type: "TableCallExpression",
+      base: base,
+      arguments: args,
+      argument: args,
+    }),
 
-    stringCallExpression: function (base, argument) {
-      return {
-        type: "StringCallExpression",
-        base: base,
-        argument: argument,
-      };
-    },
+    stringCallExpression: (base, argument) => ({
+      type: "StringCallExpression",
+      base: base,
+      argument: argument,
+    }),
 
-    comment: function (value, raw) {
-      return {
-        type: "Comment",
-        value: value,
-        raw: raw,
-      };
-    },
+    comment: (value, raw) => ({
+      type: "Comment",
+      value: value,
+      raw: raw,
+    }),
 
-    cStyleComment: function (value, raw) {
-      return {
-        type: "CStyleComment",
-        value: value,
-        raw: raw,
-      };
-    },
+    cStyleComment: (value, raw) => ({
+      type: "CStyleComment",
+      value: value,
+      raw: raw,
+    }),
   });
 
   // Wrap up the node object.
@@ -605,7 +541,7 @@
   function finishNode(node) {
     // Pop a `Marker` off the location-array and attach its location data.
     if (trackLocations) {
-      var location = locations.pop();
+      const location = locations.pop();
       location.complete();
       location.bless(node);
     }
@@ -616,10 +552,9 @@
   // Helpers
   // -------
 
-  var slice = Array.prototype.slice,
-    toString = Object.prototype.toString;
-  var indexOf = /* istanbul ignore next */ function (array, element) {
-    for (var i = 0, length = array.length; i < length; ++i) {
+  const slice = Array.prototype.slice;
+  let indexOf = /* istanbul ignore next */ (array, element) => {
+    for (let i = 0, length = array.length; i < length; ++i) {
       if (array[i] === element) return i;
     }
     return -1;
@@ -627,15 +562,13 @@
 
   /* istanbul ignore else */
   if (Array.prototype.indexOf)
-    indexOf = function (array, element) {
-      return array.indexOf(element);
-    };
+    indexOf = (array, element) => array.indexOf(element);
 
   // Iterate through an array of objects and return the index of an object
   // with a matching property.
 
   function indexOfObject(array, property, element) {
-    for (var i = 0, length = array.length; i < length; ++i) {
+    for (let i = 0, length = array.length; i < length; ++i) {
       if (array[i][property] === element) return i;
     }
     return -1;
@@ -650,21 +583,22 @@
   //     sprintf('Unexpected %2 in %1.', 'token', 'function');
 
   function sprintf(format) {
-    var args = slice.call(arguments, 1);
-    format = format.replace(/%(\d)/g, function (match, index) {
-      return "" + args[index - 1] || /* istanbul ignore next */ "";
-    });
+    const args = slice.call(arguments, 1);
+    format = format.replace(
+      /%(\d)/g,
+      (match, index) => `${args[index - 1]}` || /* istanbul ignore next */ "",
+    );
     return format;
   }
 
   // Polyfill for `Object.assign`.
 
-  var assign = /* istanbul ignore next */ function (dest) {
-    var args = slice.call(arguments, 1),
-      src,
-      prop;
+  let assign = /* istanbul ignore next */ (...args) => {
+    const dest = args[0];
+    let src;
+    let prop;
 
-    for (var i = 0, length = args.length; i < length; ++i) {
+    for (let i = 1, length = args.length; i < length; ++i) {
       src = args[i];
       /* istanbul ignore else */
       for (prop in src)
@@ -675,7 +609,6 @@
 
     return dest;
   };
-
   /* istanbul ignore else */
   if (Object.assign) assign = Object.assign;
 
@@ -712,19 +645,21 @@
   //     raise(token, "expected %1 near %2", '[', token.value);
 
   function raise(token) {
-    var message = sprintf.apply(null, slice.call(arguments, 1)),
-      error,
-      col;
-      if (options.debug) {
-        debugLog('ERROR: ' + message);
-        debugLog('Current token:', token);
-        debugLog('Current position: line ' + line + ', column ' + (index - lineStart + 1));
-      }
+    const message = sprintf.apply(null, slice.call(arguments, 1));
+    let error;
+    let col;
+    if (options.debug) {
+      debugLog(`ERROR: ${message}`);
+      debugLog("Current token:", token);
+      debugLog(
+        `Current position: line ${line}, column ${index - lineStart + 1}`,
+      );
+    }
 
     if (token === null || typeof token.line === "undefined") {
       col = index - lineStart + 1;
       error = fixupError(
-        new SyntaxError(sprintf("[%1:%2] %3", line, col, message))
+        new SyntaxError(sprintf("[%1:%2] %3", line, col, message)),
       );
       error.index = index;
       error.line = line;
@@ -732,7 +667,7 @@
     } else {
       col = token.range[0] - token.lineStart;
       error = fixupError(
-        new SyntaxError(sprintf("[%1:%2] %3", token.line, col, message))
+        new SyntaxError(sprintf("[%1:%2] %3", token.line, col, message)),
       );
       error.line = token.line;
       error.index = token.range[0];
@@ -742,7 +677,7 @@
   }
 
   function tokenValue(token) {
-    var raw = input.slice(token.range[0], token.range[1]);
+    const raw = input.slice(token.range[0], token.range[1]);
     if (raw) return raw;
     return token.value;
   }
@@ -772,9 +707,9 @@
   // If there's no token in the buffer it means we have reached <eof>.
 
   function unexpected(found) {
-    var near = tokenValue(lookahead);
+    const near = tokenValue(lookahead);
     if ("undefined" !== typeof found.type) {
-      var type;
+      let type;
       switch (found.type) {
         case StringLiteral:
           type = "string";
@@ -823,19 +758,19 @@
   //
   // `lex()` starts lexing and returns the following token in the stream.
 
-  var index,
-    token,
-    previousToken,
-    lookahead,
-    comments,
-    tokenStart,
-    line,
-    lineStart;
+  let index;
+  let token;
+  let previousToken;
+  let lookahead;
+  let comments;
+  let tokenStart;
+  let line;
+  let lineStart;
 
   exports.lex = lex;
 
   function lex() {
-    if (options.debug) debugLog('Lexing at index ' + index + ', line ' + line);
+    if (options.debug) debugLog(`Lexing at index ${index}, line ${line}`);
 
     skipWhiteSpace();
 
@@ -860,7 +795,7 @@
     }
 
     if (index >= length) {
-      if (options.debug) debugLog('Reached EOF');
+      if (options.debug) debugLog("Reached EOF");
       return {
         type: EOF,
         value: "<eof>",
@@ -870,8 +805,8 @@
       };
     }
 
-    var charCode = input.charCodeAt(index),
-      next = input.charCodeAt(index + 1);
+    const charCode = input.charCodeAt(index);
+    const next = input.charCodeAt(index + 1);
 
     // Memorize the range index where the token begins.
     tokenStart = index;
@@ -906,6 +841,7 @@
 
       case features.safeNavigation && 63: // ?
         if (46 === next) return scanPunctuator("?.");
+
 
       case 61: // =
         if (61 === next) return scanPunctuator("==");
@@ -964,7 +900,7 @@
       case 38: // &
       case 45: // -
       case 43: // +
-        if (61 === next) return scanPunctuator(input.charAt(index) + "=");
+        if (61 === next) return scanPunctuator(`${input.charAt(index)}=`);
 
       /* fall through */
       case 37:
@@ -987,8 +923,8 @@
   // single line.
 
   function consumeEOL() {
-    var charCode = input.charCodeAt(index),
-      peekCharCode = input.charCodeAt(index + 1);
+    const charCode = input.charCodeAt(index);
+    const peekCharCode = input.charCodeAt(index + 1);
 
     if (isLineTerminator(charCode)) {
       // Count \n\r and \r\n as one newline.
@@ -1004,7 +940,7 @@
 
   function skipWhiteSpace() {
     while (index < length) {
-      var charCode = input.charCodeAt(index);
+      const charCode = input.charCodeAt(index);
       if (isWhiteSpace(charCode)) {
         ++index;
       } else if (!consumeEOL()) {
@@ -1018,7 +954,8 @@
   // previous case matched.
 
   function scanIdentifierOrKeyword() {
-    var value, type;
+    let value;
+    let type;
 
     // Slicing the input string is prefered before string concatenation in a
     // loop for performance reasons.
@@ -1077,12 +1014,12 @@
   // Find the string literal by matching the delimiter marks used.
 
   function scanStringLiteral() {
-    var delimiter = input.charCodeAt(index++),
-      beginLine = line,
-      beginLineStart = lineStart,
-      stringStart = index,
-      string = encodingMode.discardStrings ? null : "",
-      charCode;
+    const delimiter = input.charCodeAt(index++);
+    const beginLine = line;
+    const beginLineStart = lineStart;
+    let stringStart = index;
+    let string = encodingMode.discardStrings ? null : "";
+    let charCode;
 
     for (; ;) {
       charCode = input.charCodeAt(index++);
@@ -1094,16 +1031,16 @@
         raise(
           null,
           errors.unfinishedString,
-          input.slice(tokenStart, index - 1)
+          input.slice(tokenStart, index - 1),
         );
       }
       if (92 === charCode) {
         // backslash
         if (!encodingMode.discardStrings) {
-          var beforeEscape = input.slice(stringStart, index - 1);
+          const beforeEscape = input.slice(stringStart, index - 1);
           string += encodingMode.fixup(beforeEscape);
         }
-        var escapeValue = readEscapeSequence();
+        const escapeValue = readEscapeSequence();
         if (!encodingMode.discardStrings) string += escapeValue;
         stringStart = index;
       }
@@ -1129,9 +1066,9 @@
   // exception.
 
   function scanLongStringLiteral() {
-    var beginLine = line,
-      beginLineStart = lineStart,
-      string = readLongString(false);
+    const beginLine = line;
+    const beginLineStart = lineStart;
+    const string = readLongString(false);
     // Fail if it's not a multiline literal.
     if (false === string) raise(token, errors.expected, "[", tokenValue(token));
 
@@ -1153,16 +1090,16 @@
   // If a hexadecimal number is encountered, it will be converted.
 
   function scanNumericLiteral() {
-    var character = input.charAt(index),
-      next = input.charAt(index + 1);
+    const character = input.charAt(index);
+    const next = input.charAt(index + 1);
 
-    var literal =
+    const literal =
       "0" === character && "xX".indexOf(next || null) >= 0
         ? readHexLiteral()
         : readDecLiteral();
 
-    var foundImaginaryUnit = readImaginaryUnitSuffix(),
-      foundInt64Suffix = readInt64Suffix();
+    const foundImaginaryUnit = readImaginaryUnitSuffix();
+    const foundInt64Suffix = readInt64Suffix();
 
     if (foundInt64Suffix && (foundImaginaryUnit || literal.hasFractionPart)) {
       raise(null, errors.malformedNumber, input.slice(tokenStart, index));
@@ -1185,9 +1122,8 @@
     if ("iI".indexOf(input.charAt(index) || null) >= 0) {
       ++index;
       return true;
-    } else {
-      return false;
     }
+    return false;
   }
 
   function readInt64Suffix() {
@@ -1203,10 +1139,9 @@
         if ("lL".indexOf(input.charAt(index) || null) >= 0) {
           ++index;
           return "ULL";
-        } else {
-          // UL but no L
-          raise(null, errors.malformedNumber, input.slice(tokenStart, index));
         }
+        // UL but no L
+        raise(null, errors.malformedNumber, input.slice(tokenStart, index));
       } else {
         // U but no L
         raise(null, errors.malformedNumber, input.slice(tokenStart, index));
@@ -1216,10 +1151,9 @@
       if ("lL".indexOf(input.charAt(index) || null) >= 0) {
         ++index;
         return "LL";
-      } else {
-        // First L but no second L
-        raise(null, errors.malformedNumber, input.slice(tokenStart, index));
       }
+      // First L but no second L
+      raise(null, errors.malformedNumber, input.slice(tokenStart, index));
     }
   }
 
@@ -1234,14 +1168,15 @@
   //     Number := ( Digit + Fraction ) * BinaryExp
 
   function readHexLiteral() {
-    var fraction = 0, // defaults to 0 as it gets summed
-      binaryExponent = 1, // defaults to 1 as it gets multiplied
-      binarySign = 1, // positive
-      digit,
-      fractionStart,
-      exponentStart,
-      digitStart;
-
+    let fraction = 0; // defaults to 0 as it gets summed
+    let binaryExponent = 1; // defaults to 1 as it gets multiplied
+    let binarySign = 1; // positive
+    // biome-ignore lint/style/useConst: <explanation>
+    let digit;
+    let fractionStart;
+    let exponentStart;
+    // biome-ignore lint/style/useConst: <explanation>
+    let digitStart;
     digitStart = index += 2; // Skip 0x part
 
     // A minimum of one hex digit is required.
@@ -1250,10 +1185,10 @@
 
     while (isHexDigit(input.charCodeAt(index))) ++index;
     // Convert the hexadecimal digit to base 10.
-    digit = parseInt(input.slice(digitStart, index), 16);
+    digit = Number.parseInt(input.slice(digitStart, index), 16);
 
     // Fraction part is optional.
-    var foundFraction = false;
+    let foundFraction = false;
     if ("." === input.charAt(index)) {
       foundFraction = true;
       fractionStart = ++index;
@@ -1266,11 +1201,11 @@
       fraction =
         fractionStart === index
           ? 0
-          : parseInt(fraction, 16) / Math.pow(16, index - fractionStart);
+          : Number.parseInt(fraction, 16) / 16 ** (index - fractionStart);
     }
 
     // Binary exponents are optional
-    var foundBinaryExponent = false;
+    let foundBinaryExponent = false;
     if ("pP".indexOf(input.charAt(index) || null) >= 0) {
       foundBinaryExponent = true;
       ++index;
@@ -1289,7 +1224,7 @@
       binaryExponent = input.slice(exponentStart, index);
 
       // Calculate the binary exponent of the number.
-      binaryExponent = Math.pow(2, binaryExponent * binarySign);
+      binaryExponent = 2 ** (binaryExponent * binarySign);
     }
 
     return {
@@ -1305,7 +1240,7 @@
   function readDecLiteral() {
     while (isDecDigit(input.charCodeAt(index))) ++index;
     // Fraction part is optional
-    var foundFraction = false;
+    let foundFraction = false;
     if ("." === input.charAt(index)) {
       foundFraction = true;
       ++index;
@@ -1314,7 +1249,7 @@
     }
 
     // Exponent part is optional.
-    var foundExponent = false;
+    let foundExponent = false;
     if ("eE".indexOf(input.charAt(index) || null) >= 0) {
       foundExponent = true;
       ++index;
@@ -1328,30 +1263,30 @@
     }
 
     return {
-      value: parseFloat(input.slice(tokenStart, index)),
+      value: Number.parseFloat(input.slice(tokenStart, index)),
       hasFractionPart: foundFraction || foundExponent,
     };
   }
 
   function readUnicodeEscapeSequence() {
-    var sequenceStart = index++;
+    const sequenceStart = index++;
 
     if (input.charAt(index++) !== "{")
       raise(
         null,
         errors.braceExpected,
         "{",
-        "\\" + input.slice(sequenceStart, index)
+        `\\${input.slice(sequenceStart, index)}`,
       );
     if (!isHexDigit(input.charCodeAt(index)))
       raise(
         null,
         errors.hexadecimalDigitExpected,
-        "\\" + input.slice(sequenceStart, index)
+        `\\${input.slice(sequenceStart, index)}`,
       );
 
     while (input.charCodeAt(index) === 0x30) ++index;
-    var escStart = index;
+    const escStart = index;
 
     while (isHexDigit(input.charCodeAt(index))) {
       ++index;
@@ -1359,29 +1294,32 @@
         raise(
           null,
           errors.tooLargeCodepoint,
-          "\\" + input.slice(sequenceStart, index)
+          `\\${input.slice(sequenceStart, index)}`,
         );
     }
 
-    var b = input.charAt(index++);
+    const b = input.charAt(index++);
     if (b !== "}") {
       if (b === '"' || b === "'")
         raise(
           null,
           errors.braceExpected,
           "}",
-          "\\" + input.slice(sequenceStart, index--)
+          `\\${input.slice(sequenceStart, index--)}`,
         );
       else
         raise(
           null,
           errors.hexadecimalDigitExpected,
-          "\\" + input.slice(sequenceStart, index)
+          `\\${input.slice(sequenceStart, index)}`,
         );
     }
 
-    var codepoint = parseInt(input.slice(escStart, index - 1) || "0", 16);
-    var frag = "\\" + input.slice(sequenceStart, index);
+    const codepoint = Number.parseInt(
+      input.slice(escStart, index - 1) || "0",
+      16,
+    );
+    const frag = `\\${input.slice(sequenceStart, index)}`;
 
     if (codepoint > (features.relaxedUTF8 ? 0x7fffffff : 0x10ffff)) {
       raise(null, errors.tooLargeCodepoint, frag);
@@ -1392,7 +1330,7 @@
 
   // Translate escape sequences to the actual characters.
   function readEscapeSequence() {
-    var sequenceStart = index;
+    const sequenceStart = index;
     switch (input.charAt(index)) {
       // Lua allow the following escape sequences.
       case "a":
@@ -1434,17 +1372,18 @@
       case "6":
       case "7":
       case "8":
-      case "9":
+      case "9": {
         // \ddd, where ddd is a sequence of up to three decimal digits.
         while (isDecDigit(input.charCodeAt(index)) && index - sequenceStart < 3)
           ++index;
 
-        var frag = input.slice(sequenceStart, index);
-        var ddd = parseInt(frag, 10);
+        const frag = input.slice(sequenceStart, index);
+        const ddd = Number.parseInt(frag, 10);
         if (ddd > 255) {
-          raise(null, errors.decimalEscapeTooLarge, "\\" + ddd);
+          raise(null, errors.decimalEscapeTooLarge, `\\${ddd}`);
         }
-        return encodingMode.encodeByte(ddd, "\\" + frag);
+        return encodingMode.encodeByte(ddd, `\\${frag}`);
+      }
 
       case "z":
         if (features.skipWhitespaceEscape) {
@@ -1463,14 +1402,14 @@
           ) {
             index += 3;
             return encodingMode.encodeByte(
-              parseInt(input.slice(sequenceStart + 1, index), 16),
-              "\\" + input.slice(sequenceStart, index)
+              Number.parseInt(input.slice(sequenceStart + 1, index), 16),
+              `\\${input.slice(sequenceStart, index)}`,
             );
           }
           raise(
             null,
             errors.hexadecimalDigitExpected,
-            "\\" + input.slice(sequenceStart, index + 2)
+            `\\${input.slice(sequenceStart, index + 2)}`,
           );
         }
         break;
@@ -1489,7 +1428,7 @@
       raise(
         null,
         errors.invalidEscape,
-        "\\" + input.slice(sequenceStart, index + 1)
+        `\\${input.slice(sequenceStart, index + 1)}`,
       );
     return input.charAt(index++);
   }
@@ -1504,12 +1443,12 @@
     tokenStart = index;
     index += 2; // --
 
-    var character = input.charAt(index),
-      content = "",
-      isLong = false,
-      commentStart = index,
-      lineStartComment = lineStart,
-      lineComment = line;
+    const character = input.charAt(index);
+    let content = "";
+    let isLong = false;
+    const commentStart = index;
+    const lineStartComment = lineStart;
+    const lineComment = line;
 
     if ("[" === character) {
       content = readLongString(true);
@@ -1527,7 +1466,7 @@
     }
 
     if (options.comments) {
-      var node = ast.comment(content, input.slice(tokenStart, index));
+      const node = ast.comment(content, input.slice(tokenStart, index));
 
       // `Marker`s depend on tokens available in the parser and as comments are
       // intercepted in the lexer all location data is set manually.
@@ -1554,12 +1493,12 @@
   function scanCStyleComment() {
     tokenStart = index; // /
 
-    var character = input.charAt(index),
-      content = "",
-      isLong = false,
-      commentStart = index,
-      lineStartComment = lineStart,
-      lineComment = line;
+    const character = input.charAt(index);
+    let content = "";
+    let isLong = false;
+    const commentStart = index;
+    const lineStartComment = lineStart;
+    const lineComment = line;
 
     content = readLongCStyleString(true);
 
@@ -1577,7 +1516,7 @@
     }
 
     if (options.comments) {
-      var node = ast.cStyleComment(content, input.slice(tokenStart, index));
+      const node = ast.cStyleComment(content, input.slice(tokenStart, index));
 
       // `Marker`s depend on tokens available in the parser and as comments are
       // intercepted in the lexer all location data is set manually.
@@ -1599,11 +1538,11 @@
   // then appending until an equal depth is found.
 
   function readLongCStyleString(isComment) {
-    var content = "",
-      terminator = false,
-      character,
-      stringStart,
-      firstLine = line;
+    let content = "";
+    let terminator = false;
+    let character;
+    let stringStart;
+    const firstLine = line;
 
     index += 2;
     // If the first character is a newline, ignore it and begin on next line.
@@ -1637,7 +1576,7 @@
       null,
       isComment ? errors.unfinishedLongComment : errors.unfinishedLongString,
       firstLine,
-      "<eof>"
+      "<eof>",
     );
   }
 
@@ -1645,12 +1584,12 @@
   // then appending until an equal depth is found.
 
   function readLongString(isComment) {
-    var level = 0,
-      content = "",
-      terminator = false,
-      character,
-      stringStart,
-      firstLine = line;
+    let level = 0;
+    let content = "";
+    let terminator = false;
+    let character;
+    let stringStart;
+    const firstLine = line;
 
     ++index; // [
 
@@ -1676,7 +1615,7 @@
       // if it matches.
       if ("]" === character) {
         terminator = true;
-        for (var i = 0; i < level; ++i) {
+        for (let i = 0; i < level; ++i) {
           if ("=" !== input.charAt(index + i)) terminator = false;
         }
         if ("]" !== input.charAt(index + level)) terminator = false;
@@ -1694,7 +1633,7 @@
       null,
       isComment ? errors.unfinishedLongComment : errors.unfinishedLongString,
       firstLine,
-      "<eof>"
+      "<eof>",
     );
   }
 
@@ -1835,25 +1774,24 @@
 
   // Store each block scope as a an array of identifier names. Each scope is
   // stored in an FILO-array.
-  var scopes,
-    // The current scope index
-    scopeDepth,
-    // A list of all global identifier nodes.
-    globals;
+  let scopes;
+  // The current scope index
+  let scopeDepth;
+  // A list of all global identifier nodes.
+  let globals;
 
   // Create a new scope inheriting all declarations from the previous scope.
   function createScope() {
-    var scope = scopes[scopeDepth++].slice();
+    const scope = scopes[scopeDepth++].slice();
     scopes.push(scope);
-    if (options.debug) debugLog('Created new scope at depth ' + scopeDepth);
+    if (options.debug) debugLog(`Created new scope at depth ${scopeDepth}`);
     if (options.onCreateScope) options.onCreateScope();
   }
 
   // Exit and remove the current scope.
   function destroyScope() {
-    var scope = scopes.pop();
     --scopeDepth;
-    if (options.debug) debugLog('Destroyed scope, new depth: ' + scopeDepth);
+    if (options.debug) debugLog(`Destroyed scope, new depth: ${scopeDepth}`);
     if (options.onDestroyScope) options.onDestroyScope();
   }
 
@@ -1866,7 +1804,7 @@
 
   // Add identifier to the current scope
   function scopeIdentifier(node) {
-    if (options.debug) debugLog('Adding identifier to scope: ' + node.name);
+    if (options.debug) debugLog(`Adding identifier to scope: ${node.name}`);
     scopeIdentifierName(node.name);
     attachScope(node, true);
   }
@@ -1892,8 +1830,8 @@
   // `loc` and `range` data. Once a `Marker` is popped off the list an end
   // location is added and the data is attached to a syntax node.
 
-  var locations = [],
-    trackLocations;
+  let locations = [];
+  let trackLocations;
 
   function createLocationMarker() {
     return new Marker(token);
@@ -1931,7 +1869,7 @@
 
   Marker.prototype.bless = function (node) {
     if (this.loc) {
-      var loc = this.loc;
+      const loc = this.loc;
       node.loc = {
         start: {
           line: loc.start.line,
@@ -1968,7 +1906,7 @@
   }
 
   FullFlowContext.prototype.isInLoop = function () {
-    var i = this.scopes.length;
+    let i = this.scopes.length;
     while (i-- > 0) {
       if (this.scopes[i].isLoop) return true;
     }
@@ -1976,7 +1914,7 @@
   };
 
   FullFlowContext.prototype.findLabel = function (name) {
-    var i = this.scopes.length;
+    let i = this.scopes.length;
     while (i-- > 0) {
       if (Object.prototype.hasOwnProperty.call(this.scopes[i].labels, name))
         return this.scopes[i].labels[name];
@@ -1986,7 +1924,7 @@
   };
 
   FullFlowContext.prototype.pushScope = function (isLoop) {
-    var scope = {
+    const scope = {
       labels: {},
       locals: [],
       deferredGotos: [],
@@ -1996,8 +1934,8 @@
   };
 
   FullFlowContext.prototype.popScope = function () {
-    for (var i = 0; i < this.pendingGotos.length; ++i) {
-      var theGoto = this.pendingGotos[i];
+    for (let i = 0; i < this.pendingGotos.length; ++i) {
+      const theGoto = this.pendingGotos[i];
       if (theGoto.maxDepth >= this.scopes.length)
         if (--theGoto.maxDepth <= 0)
           raise(theGoto.token, errors.labelNotVisible, theGoto.target);
@@ -2007,10 +1945,10 @@
   };
 
   FullFlowContext.prototype.addGoto = function (target, token) {
-    var localCounts = [];
+    const localCounts = [];
 
-    for (var i = 0; i < this.scopes.length; ++i) {
-      var scope = this.scopes[i];
+    for (let i = 0; i < this.scopes.length; ++i) {
+      const scope = this.scopes[i];
       localCounts.push(scope.locals.length);
       if (Object.prototype.hasOwnProperty.call(scope.labels, target)) return;
     }
@@ -2024,16 +1962,16 @@
   };
 
   FullFlowContext.prototype.addLabel = function (name, token) {
-    var scope = this.currentScope();
-    var definedLabel = this.findLabel(name);
+    const scope = this.currentScope();
+    const definedLabel = this.findLabel(name);
 
     if (definedLabel !== null) {
       raise(token, errors.labelAlreadyDefined, name, definedLabel.line);
     } else {
-      var newGotos = [];
+      const newGotos = [];
 
-      for (var i = 0; i < this.pendingGotos.length; ++i) {
-        var theGoto = this.pendingGotos[i];
+      for (let i = 0; i < this.pendingGotos.length; ++i) {
+        const theGoto = this.pendingGotos[i];
 
         if (theGoto.maxDepth >= this.scopes.length && theGoto.target === name) {
           if (
@@ -2068,15 +2006,15 @@
   };
 
   FullFlowContext.prototype.raiseDeferredErrors = function () {
-    var scope = this.currentScope();
-    var bads = scope.deferredGotos;
-    for (var i = 0; i < bads.length; ++i) {
-      var theGoto = bads[i];
+    const scope = this.currentScope();
+    const bads = scope.deferredGotos;
+    for (let i = 0; i < bads.length; ++i) {
+      const theGoto = bads[i];
       raise(
         theGoto.token,
         errors.gotoJumpInLocalScope,
         theGoto.target,
-        scope.locals[theGoto.localCounts[this.scopes.length - 1]].name
+        scope.locals[theGoto.localCounts[this.scopes.length - 1]].name,
       );
     }
     // Would be dead code currently, but may be useful later
@@ -2101,8 +2039,8 @@
   };
 
   LoopFlowContext.prototype.popScope = function () {
-    var levels = this.loopLevels;
-    var levlen = levels.length;
+    const levels = this.loopLevels;
+    const levlen = levels.length;
     if (levlen) {
       if (levels[levlen - 1] === this.level) levels.pop();
     }
@@ -2111,12 +2049,12 @@
 
   LoopFlowContext.prototype.addGoto = LoopFlowContext.prototype.addLabel =
     /* istanbul ignore next */
-    function () {
+    () => {
       throw new Error("This should never happen");
     };
 
   LoopFlowContext.prototype.addLocal =
-    LoopFlowContext.prototype.raiseDeferredErrors = function () { };
+    LoopFlowContext.prototype.raiseDeferredErrors = () => { };
 
   function makeFlowContext() {
     return features.labels ? new FullFlowContext() : new LoopFlowContext();
@@ -2133,10 +2071,10 @@
     next();
     markLocation();
     if (options.scope) createScope();
-    var flowContext = makeFlowContext();
+    const flowContext = makeFlowContext();
     flowContext.allowVararg = true;
     flowContext.pushScope();
-    var body = parseBlock(flowContext);
+    const body = parseBlock(flowContext);
     flowContext.popScope();
     if (options.scope) destroyScope();
     if (EOF !== token.type) unexpected(token);
@@ -2151,8 +2089,8 @@
   //     block ::= {stat} [retstat]
 
   function parseBlock(flowContext) {
-    var block = [],
-      statement;
+    const block = [];
+    let statement;
 
     while (!isBlockFollow(token)) {
       // Return has to be the last statement in a block.
@@ -2182,7 +2120,8 @@
   //          | functioncall | ';'
 
   function parseStatement(flowContext) {
-    if (options.debug) debugLog('Parsing statement, current token: ' + token.value);
+    if (options.debug)
+      debugLog(`Parsing statement, current token: ${token.value}`);
     markLocation();
 
     if (Punctuator === token.type) {
@@ -2209,10 +2148,11 @@
         case "return":
           next();
           return parseReturnStatement(flowContext);
-        case "function":
+        case "function": {
           next();
-          var name = parseFunctionName();
+          const name = parseFunctionName();
           return parseFunctionDeclaration(name);
+        }
         case "while":
           next();
           return parseWhileStatement(flowContext);
@@ -2258,11 +2198,11 @@
   //     label ::= '::' Name '::'
 
   function parseLabelStatement(flowContext) {
-    var nameToken = token,
-      label = parseIdentifier();
+    const nameToken = token;
+    const label = parseIdentifier();
 
     if (options.scope) {
-      scopeIdentifierName("::" + nameToken.value + "::");
+      scopeIdentifierName(`::${nameToken.value}::`);
       attachScope(label, true);
     }
 
@@ -2282,9 +2222,9 @@
   //     goto ::= 'goto' Name
 
   function parseGotoStatement(flowContext) {
-    var name = token.value,
-      gotoToken = previousToken,
-      label = parseIdentifier();
+    const name = token.value;
+    const gotoToken = previousToken;
+    const label = parseIdentifier();
 
     flowContext.addGoto(name, gotoToken);
     return finishNode(ast.gotoStatement(label));
@@ -2295,7 +2235,7 @@
   function parseDoStatement(flowContext) {
     if (options.scope) createScope();
     flowContext.pushScope();
-    var body = parseBlock(flowContext);
+    const body = parseBlock(flowContext);
     flowContext.popScope();
     if (options.scope) destroyScope();
     expect("end");
@@ -2305,11 +2245,11 @@
   //     while ::= 'while' exp 'do' block 'end'
 
   function parseWhileStatement(flowContext) {
-    var condition = parseExpectedExpression(flowContext);
+    const condition = parseExpectedExpression(flowContext);
     expect("do");
     if (options.scope) createScope();
     flowContext.pushScope(true);
-    var body = parseBlock(flowContext);
+    const body = parseBlock(flowContext);
     flowContext.popScope();
     if (options.scope) destroyScope();
     expect("end");
@@ -2321,10 +2261,10 @@
   function parseRepeatStatement(flowContext) {
     if (options.scope) createScope();
     flowContext.pushScope(true);
-    var body = parseBlock(flowContext);
+    const body = parseBlock(flowContext);
     expect("until");
     flowContext.raiseDeferredErrors();
-    var condition = parseExpectedExpression(flowContext);
+    const condition = parseExpectedExpression(flowContext);
     flowContext.popScope();
     if (options.scope) destroyScope();
     return finishNode(ast.repeatStatement(condition, body));
@@ -2333,10 +2273,10 @@
   //     retstat ::= 'return' [exp {',' exp}] [';']
 
   function parseReturnStatement(flowContext) {
-    var expressions = [];
+    const expressions = [];
 
     if ("end" !== token.value) {
-      var expression = parseExpression(flowContext);
+      let expression = parseExpression(flowContext);
       if (null != expression) {
         expressions.push(expression);
         while (consume(",")) {
@@ -2353,10 +2293,10 @@
   //     elif ::= 'elseif' exp 'then' block
 
   function parseIfStatement(flowContext) {
-    var clauses = [],
-      condition,
-      body,
-      marker;
+    const clauses = [];
+    let condition;
+    let body;
+    let marker;
 
     // IfClauses begin at the same location as the parent IfStatement.
     // It ends at the start of `end`, `else`, or `elseif`.
@@ -2413,8 +2353,8 @@
   //     explist ::= exp {',' exp}
 
   function parseForStatement(flowContext) {
-    var variable = parseIdentifier(),
-      body;
+    let variable = parseIdentifier();
+    let body;
 
     // The start-identifier is local.
 
@@ -2427,12 +2367,12 @@
     // Numeric For Statement.
     if (consume("=")) {
       // Start expression
-      var start = parseExpectedExpression(flowContext);
+      const start = parseExpectedExpression(flowContext);
       expect(",");
       // End expression
-      var end = parseExpectedExpression(flowContext);
+      const end = parseExpectedExpression(flowContext);
       // Optional step expression
-      var step = consume(",") ? parseExpectedExpression(flowContext) : null;
+      const step = consume(",") ? parseExpectedExpression(flowContext) : null;
 
       expect("do");
       flowContext.pushScope(true);
@@ -2442,37 +2382,36 @@
       if (options.scope) destroyScope();
 
       return finishNode(
-        ast.forNumericStatement(variable, start, end, step, body)
+        ast.forNumericStatement(variable, start, end, step, body),
       );
     }
     // If not, it's a Generic For Statement
-    else {
-      // The namelist can contain one or more identifiers.
-      var variables = [variable];
-      while (consume(",")) {
-        variable = parseIdentifier();
-        // Each variable in the namelist is locally scoped.
-        if (options.scope) scopeIdentifier(variable);
-        variables.push(variable);
-      }
-      expect("in");
-      var iterators = [];
 
-      // One or more expressions in the explist.
-      do {
-        var expression = parseExpectedExpression(flowContext);
-        iterators.push(expression);
-      } while (consume(","));
-
-      expect("do");
-      flowContext.pushScope(true);
-      body = parseBlock(flowContext);
-      flowContext.popScope();
-      expect("end");
-      if (options.scope) destroyScope();
-
-      return finishNode(ast.forGenericStatement(variables, iterators, body));
+    // The namelist can contain one or more identifiers.
+    const variables = [variable];
+    while (consume(",")) {
+      variable = parseIdentifier();
+      // Each variable in the namelist is locally scoped.
+      if (options.scope) scopeIdentifier(variable);
+      variables.push(variable);
     }
+    expect("in");
+    const iterators = [];
+
+    // One or more expressions in the explist.
+    do {
+      const expression = parseExpectedExpression(flowContext);
+      iterators.push(expression);
+    } while (consume(","));
+
+    expect("do");
+    flowContext.pushScope(true);
+    body = parseBlock(flowContext);
+    flowContext.popScope();
+    expect("end");
+    if (options.scope) destroyScope();
+
+    return finishNode(ast.forGenericStatement(variables, iterators, body));
   }
 
   // Local statements can either be variable assignments or function
@@ -2486,13 +2425,13 @@
   //        | 'local' Name {',' Name} ['=' exp {',' exp}]
 
   function parseLocalStatement(flowContext) {
-    var name,
-      attribute,
-      marker,
-      declToken = previousToken;
+    let name;
+    let attribute;
+    let marker;
+    const declToken = previousToken;
     if (Identifier === token.type) {
-      var variables = [],
-        init = [];
+      const variables = [];
+      const init = [];
 
       do {
         if (trackLocations) marker = createLocationMarker();
@@ -2506,7 +2445,7 @@
         if (attribute !== null) {
           if (trackLocations) pushLocation(marker);
           variables.push(
-            finishNode(ast.identifierWithAttribute(name, attribute))
+            finishNode(ast.identifierWithAttribute(name, attribute)),
           );
         } else {
           variables.push(name);
@@ -2522,11 +2461,11 @@
       ];
 
       /** @type string | undefined */
-      let specialOperator = specialOperators.find((op) => consume(op));
+      const specialOperator = specialOperators.find((op) => consume(op));
 
       if (consume("=") || specialOperator !== undefined) {
         do {
-          var expression = parseExpectedExpression(flowContext);
+          const expression = parseExpectedExpression(flowContext);
           init.push(expression);
         } while (consume(","));
       }
@@ -2535,7 +2474,7 @@
       // Therefore assignments can't use their declarator. And the identifiers
       // shouldn't be added to the scope until the statement is complete.
       if (options.scope) {
-        for (var i = 0, l = variables.length; i < l; ++i) {
+        for (let i = 0, l = variables.length; i < l; ++i) {
           scopeIdentifier(variables[i]);
         }
       }
@@ -2543,7 +2482,7 @@
       return finishNode(
         specialOperator
           ? ast.localOperatorStatement(specialOperator, variables, init)
-          : ast.localStatement(variables, init)
+          : ast.localStatement(variables, init),
       );
     }
     if (consume("function")) {
@@ -2557,9 +2496,8 @@
 
       // MemberExpressions are not allowed in local function statements.
       return parseFunctionDeclaration(name, true);
-    } else {
-      raiseUnexpectedToken("<name>", token);
     }
+    raiseUnexpectedToken("<name>", token);
   }
 
   //     assignment ::= varlist '=' explist
@@ -2573,12 +2511,13 @@
   function parseAssignmentOrCallStatement(flowContext) {
     // Keep a reference to the previous token for better error messages in case
     // of invalid statement
-    var previous = token,
-      marker,
-      startMarker;
-    var lvalue, base, name;
+    let marker;
+    let startMarker;
+    let lvalue;
+    let base;
+    let name;
 
-    var targets = [];
+    const targets = [];
 
     if (trackLocations) startMarker = createLocationMarker();
 
@@ -2601,7 +2540,6 @@
       }
 
       both: for (; ;) {
-        var newBase;
 
         switch (StringLiteral === token.type ? '"' : token.value) {
           case ".":
@@ -2631,12 +2569,13 @@
       }
 
       next();
+      // biome-ignore lint/correctness/noConstantCondition: <explanation>
     } while (true);
 
     if (targets.length === 1 && lvalue === null) {
       pushLocation(marker);
       return finishNode(ast.callStatement(targets[0]));
-    } else if (!lvalue) {
+    } if (!lvalue) {
       return unexpected(token);
     }
 
@@ -2647,7 +2586,7 @@
     if (compoundOperator !== undefined) expect(token.value);
     else expect("=");
 
-    var values = [];
+    const values = [];
 
     do {
       values.push(parseExpectedExpression(flowContext));
@@ -2655,9 +2594,9 @@
 
     pushLocation(startMarker);
     return finishNode(
-      compoundOperator != undefined
+      compoundOperator !== undefined
         ? ast.compoundAssignmentStatement(compoundOperator, targets, values)
-        : ast.assignmentStatement(targets, values)
+        : ast.assignmentStatement(targets, values),
     );
   }
 
@@ -2667,7 +2606,7 @@
 
   function parseIdentifier() {
     markLocation();
-    var identifier = token.value;
+    const identifier = token.value;
     if (Identifier !== token.type) raiseUnexpectedToken("<name>", token);
     next();
     return finishNode(ast.identifier(identifier));
@@ -2677,7 +2616,7 @@
     markLocation();
     if (consume("<")) {
       if (Identifier !== token.type) raiseUnexpectedToken("<name>", token);
-      var identifier = token.value;
+      const identifier = token.value;
       if (!features.attributes[identifier])
         raise(token, errors.unknownAttribute, identifier);
       next();
@@ -2699,10 +2638,10 @@
   //     parlist ::= Name {',' Name} | [',' '...'] | '...'
 
   function parseFunctionDeclaration(name, isLocal) {
-    var flowContext = makeFlowContext();
+    const flowContext = makeFlowContext();
     flowContext.pushScope();
 
-    var parameters = [];
+    const parameters = [];
     expect("(");
 
     // The declaration has arguments
@@ -2711,7 +2650,7 @@
       // with a vararg.
       while (true) {
         if (Identifier === token.type) {
-          var parameter = parseIdentifier();
+          const parameter = parseIdentifier();
           // Function parameters are local.
           if (options.scope) scopeIdentifier(parameter);
 
@@ -2731,7 +2670,7 @@
       }
     }
 
-    var body = parseBlock(flowContext);
+    const body = parseBlock(flowContext);
     flowContext.popScope();
     expect("end");
     if (options.scope) destroyScope();
@@ -2745,7 +2684,9 @@
   //     Name {'.' Name} [':' Name]
 
   function parseFunctionName() {
-    var base, name, marker;
+    let base;
+    let name;
+    let marker;
 
     if (trackLocations) marker = createLocationMarker();
     base = parseIdentifier();
@@ -2778,9 +2719,9 @@
   //     fieldsep ::= ',' | ';'
 
   function parseTableConstructor(flowContext) {
-    var fields = [],
-      key,
-      value;
+    const fields = [];
+    let key;
+    let value;
 
     while (true) {
       markLocation();
@@ -2808,6 +2749,7 @@
           fields.push(finishNode(ast.tableValue(value)));
         }
       } else {
+        // biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
         if (null == (value = parseExpression(flowContext))) {
           locations.pop();
           break;
@@ -2840,13 +2782,13 @@
   //
 
   function parseExpression(flowContext) {
-    if (options.debug) debugLog('Parsing expression');
-    var expression = parseSubExpression(0, flowContext);
+    if (options.debug) debugLog("Parsing expression");
+    const expression = parseSubExpression(0, flowContext);
     if (options.debug) {
       if (expression) {
-        debugLog('Expression result:', { type: expression.type });
+        debugLog("Expression result:", { type: expression.type });
       } else {
-        debugLog('No expression found');
+        debugLog("No expression found");
       }
     }
     return expression;
@@ -2855,7 +2797,7 @@
   // Parse an expression expecting it to be valid.
 
   function parseExpectedExpression(flowContext) {
-    var expression = parseExpression(flowContext);
+    const expression = parseExpression(flowContext);
     if (null == expression) raiseUnexpectedToken("<expression>", token);
     else return expression;
   }
@@ -2869,8 +2811,8 @@
   // the expensive CompareICStub which took ~8% of the parse time.
 
   function binaryPrecedence(operator) {
-    var charCode = operator.charCodeAt(0),
-      length = operator.length;
+    const charCode = operator.charCodeAt(0);
+    const length = operator.length;
 
     if (1 === length) {
       switch (charCode) {
@@ -2893,7 +2835,8 @@
         case 62:
           return 3; // < >
       }
-    } else if (2 === length) {
+    }
+    if (2 === length) {
       switch (charCode) {
         case 47:
           return 10; // //
@@ -2911,7 +2854,8 @@
         case 111:
           return 1; // or
       }
-    } else if (97 === charCode && "and" === operator) return 2;
+    }
+    if (97 === charCode && "and" === operator) return 2;
     return 0;
   }
 
@@ -2925,10 +2869,10 @@
   //     exp ::= (unop exp | primary | prefixexp ) { binop exp }
 
   function parseSubExpression(minPrecedence, flowContext) {
-    var operator = token.value,
-      // The left-hand side in binary operations.
-      expression,
-      marker;
+    let operator = token.value;
+    // The left-hand side in binary operations.
+    let expression;
+    let marker;
 
     if (trackLocations) marker = createLocationMarker();
 
@@ -2936,7 +2880,7 @@
     if (isUnary(token)) {
       markLocation();
       next();
-      var argument = parseSubExpression(10, flowContext);
+      const argument = parseSubExpression(10, flowContext);
       if (argument == null) raiseUnexpectedToken("<expression>", token);
       expression = finishNode(ast.unaryExpression(operator, argument));
     }
@@ -2951,7 +2895,7 @@
     // This is not a valid left hand expression.
     if (null == expression) return null;
 
-    var precedence;
+    let precedence;
     while (true) {
       operator = token.value;
 
@@ -2964,12 +2908,12 @@
       // Right-hand precedence operators
       if ("^" === operator || ".." === operator) --precedence;
       next();
-      var right = parseSubExpression(precedence, flowContext);
+      const right = parseSubExpression(precedence, flowContext);
       if (null == right) raiseUnexpectedToken("<expression>", token);
       // Push in the marker created before the loop to wrap its entirety.
       if (trackLocations) locations.push(marker);
       expression = finishNode(
-        ast.binaryExpression(operator, expression, right)
+        ast.binaryExpression(operator, expression, right),
       );
     }
     return expression;
@@ -2982,7 +2926,8 @@
   //     args ::= '(' [explist] ')' | tableconstructor | String
 
   function parsePrefixExpressionPart(base, marker, flowContext) {
-    var expression, identifier;
+    let expression;
+    let identifier;
 
     if (Punctuator === token.type) {
       switch (token.value) {
@@ -3016,7 +2961,7 @@
           pushLocation(marker);
           return parseCallExpression(base, flowContext);
       }
-    } else if (StringLiteral === token.type) {
+    } if (StringLiteral === token.type) {
       pushLocation(marker);
       return parseCallExpression(base, flowContext);
     }
@@ -3025,7 +2970,9 @@
   }
 
   function parsePrefixExpression(flowContext) {
-    var base, name, marker;
+    let base;
+    let name;
+    let marker;
 
     if (trackLocations) marker = createLocationMarker();
 
@@ -3044,7 +2991,7 @@
 
     // The suffix
     for (; ;) {
-      var newBase = parsePrefixExpressionPart(base, marker, flowContext);
+      const newBase = parsePrefixExpressionPart(base, marker, flowContext);
       if (newBase === null) break;
       base = newBase;
     }
@@ -3057,7 +3004,7 @@
   function parseCallExpression(base, flowContext) {
     if (Punctuator === token.type) {
       switch (token.value) {
-        case "(":
+        case "(": {
           if (!features.emptyStatement) {
             if (token.line !== previousToken.line)
               raise(null, errors.ambiguousSyntax, token.value);
@@ -3065,8 +3012,8 @@
           next();
 
           // List of expressions
-          var expressions = [];
-          var expression = parseExpression(flowContext);
+          const expressions = [];
+          let expression = parseExpression(flowContext);
           if (null != expression) {
             expressions.push(expression);
             while (consume(",")) {
@@ -3077,16 +3024,18 @@
 
           expect(")");
           return finishNode(ast.callExpression(base, expressions));
+        }
 
-        case "{":
+        case "{": {
           markLocation();
           next();
-          var table = parseTableConstructor(flowContext);
+          const table = parseTableConstructor(flowContext);
           return finishNode(ast.tableCallExpression(base, table));
+        }
       }
-    } else if (StringLiteral === token.type) {
+    } if (StringLiteral === token.type) {
       return finishNode(
-        ast.stringCallExpression(base, parsePrimaryExpression(flowContext))
+        ast.stringCallExpression(base, parsePrimaryExpression(flowContext)),
       );
     }
 
@@ -3097,15 +3046,15 @@
   //          | functiondef | tableconstructor | '...'
 
   function parsePrimaryExpression(flowContext) {
-    var literals =
+    const literals =
       StringLiteral |
       NumericLiteral |
       BooleanLiteral |
       NilLiteral |
-      VarargLiteral,
-      value = token.value,
-      type = token.type,
-      marker;
+      VarargLiteral;
+    const value = token.value;
+    const type = token.type;
+    let marker;
 
     if (trackLocations) marker = createLocationMarker();
 
@@ -3115,15 +3064,15 @@
 
     if (type & literals) {
       pushLocation(marker);
-      var raw = input.slice(token.range[0], token.range[1]);
+      const raw = input.slice(token.range[0], token.range[1]);
       next();
       return finishNode(ast.literal(type, value, raw));
-    } else if (Keyword === type && "function" === value) {
+    } if (Keyword === type && "function" === value) {
       pushLocation(marker);
       next();
       if (options.scope) createScope();
       return parseFunctionDeclaration(null);
-    } else if (consume("{")) {
+    } if (consume("{")) {
       pushLocation(marker);
       return parseTableConstructor(flowContext);
     }
@@ -3154,7 +3103,7 @@
 
   exports.parse = parse;
 
-  var versionFeatures = {
+  const versionFeatures = {
     5.1: {},
     5.2: {
       labels: true,
@@ -3247,16 +3196,16 @@
     locations = [];
 
     if (options.debug) {
-      debugLog('Parser initialized with options:', options);
-      debugLog('Lua version: ' + options.luaVersion);
-      debugLog('Input length: ' + input.length + ' characters');
+      debugLog("Parser initialized with options:", options);
+      debugLog(`Lua version: ${options.luaVersion}`);
+      debugLog(`Input length: ${input.length} characters`);
     }
 
     if (
       !Object.prototype.hasOwnProperty.call(versionFeatures, options.luaVersion)
     ) {
       throw new Error(
-        sprintf("Lua version '%1' not supported", options.luaVersion)
+        sprintf("Lua version '%1' not supported", options.luaVersion),
       );
     }
 
@@ -3268,7 +3217,7 @@
       !Object.prototype.hasOwnProperty.call(encodingModes, options.encodingMode)
     ) {
       throw new Error(
-        sprintf("Encoding mode '%1' not supported", options.encodingMode)
+        sprintf("Encoding mode '%1' not supported", options.encodingMode),
       );
     }
 
@@ -3276,11 +3225,11 @@
 
     if (options.comments) comments = [];
     if (!options.wait) {
-      if (options.debug) debugLog('Starting parse immediately');
+      if (options.debug) debugLog("Starting parse immediately");
       return end();
     }
 
-    if (options.debug) debugLog('Waiting for more input before parsing');
+    if (options.debug) debugLog("Waiting for more input before parsing");
     return exports;
   }
 
@@ -3301,23 +3250,21 @@
 
     // Ignore shebangs.
     if (input && input.substr(0, 2) === "#!")
-      input = input.replace(/^.*/, function (line) {
-        return line.replace(/./g, " ");
-      });
+      input = input.replace(/^.*/, (line) => line.replace(/./g, " "));
 
     length = input.length;
     trackLocations = options.locations || options.ranges;
     // Initialize with a lookahead token.
     lookahead = lex();
 
-    var chunk = parseChunk();
+    const chunk = parseChunk();
     if (options.comments) chunk.comments = comments;
     if (options.scope) chunk.globals = globals;
 
     /* istanbul ignore if */
     if (locations.length > 0)
       throw new Error(
-        "Location tracking failed. This is most likely a bug in fivem-luaparse"
+        "Location tracking failed. This is most likely a bug in fivem-luaparse",
       );
 
     return chunk;

@@ -32,9 +32,14 @@
   },
   "scripts": {
     "test": "make qa",
-    "version": "make version-bump"
+    "version": "make version-bump",
+    "build": "gulp build",
+    "biome:check": "biome check",
+    "biome:format": "pnpm biome format",
+    "biome:lint": "biome lint"
   },
   "devDependencies": {
+    "@biomejs/biome": "1.9.4",
     "benchmark": "~1.0.0",
     "complexity-report": "~0.10.5",
     "gulp": "^4.0.0",
@@ -51,5 +56,11 @@
     "testem": "^3.6.0",
     "through2": "^4.0.2",
     "typescript": "^5.7.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@biomejs/biome",
+      "es5-ext"
+    ]
   }
 }
