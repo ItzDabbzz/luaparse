@@ -1,12 +1,13 @@
 /* globals require: true */
-var gulp = require('gulp')
-  , header = require('gulp-header')
-  , uglify = require('gulp-uglify')
-  , rename = require('gulp-rename')
-  , jshint = require('gulp-jshint')
-  , addsrc = require('gulp-add-src')
-  , pkg = require('./package.json')
-  , banner = [
+const gulp = require('gulp');
+const header = require('gulp-header');
+const uglify = require('gulp-uglify');
+const rename = require('gulp-rename');
+const { Buffer } = require('node:buffer');
+const jshint = require('gulp-jshint');
+const addsrc = require('gulp-add-src');
+const pkg = require('./package.json');
+const banner = [
       '/*!'
     , ' * @license'
     , ' * <%= pkg.name %> <%= pkg.version %> <%= pkg.homepage %>'
@@ -16,26 +17,24 @@ var gulp = require('gulp')
     , ''
   ].join('\n');
 
-var striphtml = (function () {
-  /* globals Buffer: true */
-  'use strict';
+const striphtml = (() => {
 
-  var PluginError = require('plugin-error')
-    , through = require('through2');
+  const PluginError = require('plugin-error');
+  const through = require('through2');
 
-  function removeHTML(src, patterns) {
-    var lines = src.split('\n')
-      , scriptSection = false
-      , commentingSection = false;
+  function removeHTML(src, _patterns) {
+    const lines = src.split('\n');
+    let scriptSection = false;
+    let commentingSection = false;
 
-    lines.forEach(function (line, i) {
-      var starts = (/<script/i).test(line)
-        , stops = (/<\/script/i).test(line)
-        , commentStart = (/<!--/).test(line)
-        , commentStop = (/-->/).test(line);
+    lines.forEach((line, i) => {
+      const starts = (/<script/i).test(line);
+      const stops = (/<\/script/i).test(line);
+      const commentStart = (/<!--/).test(line);
+      const commentStop = (/-->/).test(line);
 
       if (starts && !(starts && stops)) {
-        var type = line.match(/<script[^>]*type=['"]?([^\s"']*)[^>]*>/i);
+        const type = line.match(/<script[^>]*type=['"]?([^\s"']*)[^>]*>/i);
         scriptSection = (type === null || type[1] === 'text/javascript');
         lines[i] = '';
       } else if (stops) {
@@ -58,8 +57,7 @@ var striphtml = (function () {
     return lines.join('\n');
   }
 
-  return function (options) {
-    return through.obj(function processContent(file, enc, cb) {
+  return () => through.obj(function processContent(file, _enc, cb) {
       if (file.isNull()) {
         cb(null, file);
         return;
@@ -69,25 +67,21 @@ var striphtml = (function () {
         return;
       }
 
-      var res = removeHTML(file.contents.toString());
+      const res = removeHTML(file.contents.toString());
       file.contents = new Buffer(res);
       this.push(file);
       cb();
     });
-  };
 })();
 
-gulp.task('build', function() {
-  return gulp.src('luaparse.js')
+gulp.task('build', () => gulp.src('luaparse.js')
     .pipe(header(banner, { pkg : pkg  } ))
     .pipe(gulp.dest('dist'))
     .pipe(uglify({ output: { comments: /^!|@preserve|@license|@cc_on/i } }))
     .pipe(rename({ extname: '.min.js' }))
-    .pipe(gulp.dest('dist'));
-});
+    .pipe(gulp.dest('dist')));
 
-gulp.task('lint', function() {
-  return gulp.src([
+gulp.task('lint', () => gulp.src([
         'examples/**/*.html'
       , 'docs/!(coverage)/*.html'
     ])
@@ -101,19 +95,16 @@ gulp.task('lint', function() {
     ]))
     .pipe(jshint())
     .pipe(jshint.reporter('default'))
-    .pipe(jshint.reporter('fail'));
-});
+    .pipe(jshint.reporter('fail')));
 
-gulp.task('version-bump', function () {
-  var through = require('through2');
+gulp.task('version-bump', () => {
+  const through = require('through2');
 
   return gulp.src('luaparse.js')
     .pipe(through.obj(function processContent(file, enc, cb) {
-      var data = file.contents.toString();
+      const data = file.contents.toString();
       file.contents = new Buffer(data.replace(
-        /(exports\.version\s*=\s*)(?:'[^']+'|"[^"]+")(;)/, function (_, s0, s1) {
-          return s0 + JSON.stringify(pkg.version) + s1;
-        }));
+        /(exports\.version\s*=\s*)(?:'[^']+'|"[^"]+")(;)/, (_, s0, s1) => s0 + JSON.stringify(pkg.version) + s1));
       this.push(file);
       cb();
     }))

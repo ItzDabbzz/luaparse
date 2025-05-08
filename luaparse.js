@@ -118,7 +118,7 @@
     // Encoding mode: how to interpret code units higher than U+007F in input
     encodingMode: "none",
     // Debug Mode: Outputs a log of all current inner workings
-    debug: false,
+    debug: false
   });
 
   function encodeUTF8(codepoint, highMask) {
@@ -432,16 +432,7 @@
     }),
 
     literal: (type, value, raw) => {
-      type =
-        type === StringLiteral
-          ? "StringLiteral"
-          : type === NumericLiteral
-            ? "NumericLiteral"
-            : type === BooleanLiteral
-              ? "BooleanLiteral"
-              : type === NilLiteral
-                ? "NilLiteral"
-                : "VarargLiteral";
+      type = type === StringLiteral ? "StringLiteral" : type === NumericLiteral ? "NumericLiteral" : type === BooleanLiteral ? "BooleanLiteral" : type === NilLiteral ? "NilLiteral" : "VarargLiteral";
 
       return {
         type: type,
@@ -474,10 +465,7 @@
       fields: fields,
     }),
     binaryExpression: (operator, left, right) => {
-      const type =
-        "and" === operator || "or" === operator
-          ? "LogicalExpression"
-          : "BinaryExpression";
+      const type = "and" === operator || "or" === operator ? "LogicalExpression" : "BinaryExpression";
 
       return {
         type: type,
@@ -842,7 +830,7 @@
       case features.safeNavigation && 63: // ?
         if (46 === next) return scanPunctuator("?.");
 
-
+        break;
       case 61: // =
         if (61 === next) return scanPunctuator("==");
         return scanPunctuator("=");
@@ -888,11 +876,11 @@
             if (47 === next) return scanPunctuator("//");
           return scanPunctuator("/");
         }
-
+        break;
       case 38:
       case 124: // & |
         if (!features.bitwiseOperators) break;
-
+        break;
       case 42: // *
       case 94: // ^
       case 124: // |
@@ -901,7 +889,7 @@
       case 45: // -
       case 43: // +
         if (61 === next) return scanPunctuator(`${input.charAt(index)}=`);
-
+        break;
       /* fall through */
       case 37:
       case 44:
@@ -1094,9 +1082,7 @@
     const next = input.charAt(index + 1);
 
     const literal =
-      "0" === character && "xX".indexOf(next || null) >= 0
-        ? readHexLiteral()
-        : readDecLiteral();
+      "0" === character && "xX".indexOf(next || null) >= 0 ? readHexLiteral() : readDecLiteral();
 
     const foundImaginaryUnit = readImaginaryUnitSuffix();
     const foundInt64Suffix = readInt64Suffix();
@@ -1198,10 +1184,7 @@
 
       // Empty fraction parts should default to 0, others should be converted
       // 0.x form so we can use summation at the end.
-      fraction =
-        fractionStart === index
-          ? 0
-          : Number.parseInt(fraction, 16) / 16 ** (index - fractionStart);
+      fraction = fractionStart === index ? 0 : Number.parseInt(fraction, 16) / 16 ** (index - fractionStart);
     }
 
     // Binary exponents are optional
@@ -2479,11 +2462,7 @@
         }
       }
 
-      return finishNode(
-        specialOperator
-          ? ast.localOperatorStatement(specialOperator, variables, init)
-          : ast.localStatement(variables, init),
-      );
+      return finishNode( specialOperator ? ast.localOperatorStatement(specialOperator, variables, init) : ast.localStatement(variables, init),);
     }
     if (consume("function")) {
       name = parseIdentifier();
@@ -2579,9 +2558,7 @@
       return unexpected(token);
     }
 
-    const compoundOperator = features.compoundOperators
-      ? CompoundOperators.find((op) => op === token.value)
-      : undefined;
+    const compoundOperator = features.compoundOperators ? CompoundOperators.find((op) => op === token.value) : undefined;
 
     if (compoundOperator !== undefined) expect(token.value);
     else expect("=");
@@ -2594,9 +2571,7 @@
 
     pushLocation(startMarker);
     return finishNode(
-      compoundOperator !== undefined
-        ? ast.compoundAssignmentStatement(compoundOperator, targets, values)
-        : ast.assignmentStatement(targets, values),
+      compoundOperator !== undefined ? ast.compoundAssignmentStatement(compoundOperator, targets, values) : ast.assignmentStatement(targets, values),
     );
   }
 
@@ -2900,9 +2875,7 @@
       operator = token.value;
 
       precedence =
-        Punctuator === token.type || Keyword === token.type
-          ? binaryPrecedence(operator)
-          : 0;
+        Punctuator === token.type || Keyword === token.type ? binaryPrecedence(operator) : 0;
 
       if (precedence === 0 || precedence <= minPrecedence) break;
       // Right-hand precedence operators

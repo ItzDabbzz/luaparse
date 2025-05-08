@@ -1,7 +1,16 @@
-DOCS := docs/*.md
-PROCESSOR ?= "/opt/v8/tools/linux-tick-processor"
-LIB := ./node_modules
-BIN := $(LIB)/.bin
+SHELL := cmd.exe
+
+# Windows command aliases
+CP = copy /Y
+RM = del /F /Q
+RMDIR = rmdir /S /Q
+MKDIR = mkdir
+CAT = type
+PROCESSOR ?= C:\\Dev\\node-v22.15.0\\deps\\v8\\tools\\windows-tick-processor.bat
+
+DOCS := docs\\*.md
+LIB := .\\node_modules
+BIN := $(LIB)\\.bin
 
 all: build
 
@@ -9,10 +18,10 @@ all: build
 # ----------
 
 build:
-	$(BIN)/gulp build
+	$(BIN)\\gulp.cmd build
 
 lint:
-	$(BIN)/gulp lint
+	$(BIN)\\gulp.cmd lint
 
 .PHONY: build lint all
 
@@ -20,15 +29,14 @@ lint:
 # ----------------------------
 
 install:
-	npm install
+	pnpm install
 
-# This is required if mocha, expect or benchmark is updated.
 update:
-	cp -v $(LIB)/spec/lib/* test/lib/
-	cp -v $(LIB)/benchmark/benchmark.js test/lib/
+	$(CP) $(LIB)\\spec\\lib\\* test\\lib\\
+	$(CP) $(LIB)\\benchmark\\benchmark.js test\\lib\\
 
 version-bump:
-	$(BIN)/gulp version-bump
+	$(BIN)\\gulp.cmd version-bump
 	git add luaparse.js
 
 .PHONY: install update version-bump
@@ -37,25 +45,22 @@ version-bump:
 # -----
 
 test-node:
-	node test/runner.js --console
+	node test\\runner.js --console
 
 test:
-	$(BIN)/testem ci
+	$(BIN)\\testem.cmd ci
 
 testem-engines:
-	$(BIN)/testem -l node,ringo,rhino,rhino1.7R5
+	$(BIN)\\testem.cmd -l node,ringo,rhino,rhino1.7R5
 
-# Scaffold all test files in the scaffolding dir.
 scaffold-tests:
-	$(foreach file,\
-		$(notdir $(wildcard test/scaffolding/*)),\
-		$(MAKE) scaffold-test FILE=$(file);\
-	)
+	for %%F in (test\\scaffolding\\*) do \
+		$(MAKE) scaffold-test FILE=%%~nxF
 
 scaffold-test:
-	./scripts/scaffold-test --name=$(FILE) \
-		test/scaffolding/$(FILE) \
-		> test/spec/$(FILE).js
+	.\scripts\scaffold-test.cmd --name=$(FILE) ^
+		test\\scaffolding\\$(FILE) ^
+		> test\\spec\\$(FILE).js
 
 .PHONY: test-node test testem-engines scaffold-tests scaffold-test
 
@@ -65,17 +70,18 @@ scaffold-test:
 docs: coverage docs-test docs-md
 
 docs-index:
-	$(BIN)/marked README.md --gfm \
-		| cat docs/layout/head.html - docs/layout/foot.html \
-		> docs/index.html
+	$(BIN)\\marked.cmd README.md --gfm > tmp.html
+	$(CAT) docs\\layout\\head.html tmp.html docs\\layout\\foot.html > docs\\index.html
+	$(RM) tmp.html
 
-docs-md: docs-index $(patsubst %.md,%.html, $(wildcard docs/*.md))
+docs-md: docs-index
+	@for %%F in ($(DOCS)) do \
+		$(MAKE) "%%~nF.html"
 
 %.html: %.md
-	echo $<
-	$(BIN)/marked $< --gfm \
-		| cat docs/layout/head.html - docs/layout/foot.html \
-		> $@
+	$(BIN)\\marked.cmd $< --gfm > tmp.html
+	$(CAT) docs\\layout\\head.html tmp.html docs\\layout\\foot.html > $@
+	$(RM) tmp.html
 
 .PHONY: docs docs-test docs-index
 
@@ -83,8 +89,9 @@ docs-md: docs-index $(patsubst %.md,%.html, $(wildcard docs/*.md))
 # --------
 
 coverage:
-	rm -rf html-report docs/coverage
-	$(BIN)/nyc --reporter=html --report-dir=docs/coverage node test/runner.js --console >/dev/null
+	-$(RMDIR) html-report
+	-$(RMDIR) docs\\coverage
+	$(BIN)\\nyc.cmd --reporter=html --report-dir=docs\\coverage node test\\runner.js --console >NUL
 
 .PHONY: coverage
 
@@ -92,13 +99,13 @@ coverage:
 # ---------
 
 benchmark:
-	./scripts/benchmark -v benchmarks/lib/ParseLua.lua
+	node C:\\Users\\Davin\\Desktop\\Projects\\FivemTools\\packages\\luaparse\\scripts\\benchmark.js -v C:\\Users\\Davin\\Desktop\\Projects\\FivemTools\\packages\\luaparse\\benchmarks\\lib\\ParseLua.lua
 
 profile:
-	bash benchmarks/run.sh -v --processor $(PROCESSOR) --profile HEAD
+	.\benchmarks\run.js -v --processor $(PROCESSOR) --profile HEAD
 
 benchmark-previous:
-	bash benchmarks/run.sh --js HEAD HEAD~1
+	.\benchmarks\run.js --js HEAD HEAD~1
 
 .PHONY: benchmark profile benchmark-previous
 
@@ -106,18 +113,21 @@ benchmark-previous:
 # -----------------
 
 complexity-analysis:
-	@echo "===================== Complexity analysis ============================"
-	./scripts/complexity 10
-	$(BIN)/cr -lws --maxcc 22 luaparse.js
+	@echo ===================== Complexity analysis ============================
+	node C:\\Users\\Davin\\Desktop\\Projects\\FivemTools\\packages\\luaparse\\scripts\\complexity.js 10
+	$(BIN)\\cr.cmd -lws --maxcc 22 luaparse.js
 
 coverage-analysis: coverage
-	$(BIN)/nyc check-coverage --statements 100 --branches 100 --functions 100
+	$(BIN)\\nyc.cmd check-coverage --statements 100 --branches 100 --functions 100
 
 qa:
 	$(MAKE) test lint complexity-analysis coverage-analysis
 
 clean:
-	rm -f docs/*.html
-	rm -rf lib-cov coverage html-report docs/coverage/
+	-$(RM) docs\\*.html
+	-$(RMDIR) lib-cov
+	-$(RMDIR) coverage
+	-$(RMDIR) html-report
+	-$(RMDIR) docs\\coverage
 
 .PHONY: complexity-analysis coverage-analysis qa clean

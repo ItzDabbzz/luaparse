@@ -243,6 +243,8 @@
   <script src="js/walker.js"></script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script>
+    /* global console */
+    /* global luaparse */
     (function (window, $, lp, walker) {
       var path = window.location.href.replace(/([^\/]+)\/([^\/]+)$/, '')
         , parseLuaScript = path + 'benchmarks/lib/ParseLua.lua'

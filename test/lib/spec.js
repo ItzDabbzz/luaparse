@@ -2,7 +2,7 @@
  * Spec unit testing library
  * http://github.com/kitcambridge/spec
  *
- * Copyright 2011-2012, Kit Cambridge
+ * Copyright 2011-2014, Kit Cambridge
  * http://kitcambridge.github.com
  *
  * Released under the MIT License.
@@ -20,8 +20,6 @@
       "noConflict": (function (original) {
         function noConflict() {
           root.Spec = original;
-          // `noConflict` can't be invoked more than once.
-          delete Spec.noConflict;
           return Spec;
         }
         return noConflict;
@@ -32,7 +30,7 @@
   "use strict";
 
   // The current version of Spec. Keep in sync with `package.json`.
-  exports.version = "1.0.0rc4";
+  exports.version = "1.0.1";
 
   // Utility Methods
   // ---------------
@@ -216,7 +214,7 @@
       if (left === right) {
         // `0` and `-0` are identical, but they aren't equivalent. See the
         // ECMAScript Harmony `egal` proposal.
-        return left != 0 || (1 / left == 1 / right);
+        return left !== 0 || (1 / left == 1 / right);
       }
       // `null` and `undefined` are compared by identity.
       if (left == null) {
@@ -349,14 +347,14 @@
         // As of Node 0.6.9, neither `process.nextTick` nor `setTimeout` isolate
         // execution; if the `callback` throws an exception, subsequent deferred
         // callbacks **will not execute**. This is an unfortunate incompatibility
-        // with both the `setTimeout` function exposed in Browsers,
+        // with both the `setTimeout` function exposed in Browsers and Phantom,
         // and the Java `Timer` API exposed via LiveConnect in Rhino.
         function run() {
           call.call(callback, context);
         }
         process.nextTick(run);
       };
-    // Browsers provide the `setTimeout` function.
+    // Browsers and Phantom provide the `setTimeout` function.
     } else if (Environment.setTimeout) {
       defer = function defer(callback, context) {
         function run() {
@@ -398,6 +396,14 @@
     }
     return defer;
   }());
+
+  // Internal: Re-throws an exception asynchronously, allowing all subsequent
+  // callbacks to fire.
+  function rethrow(exception) {
+    defer(function () {
+      throw exception;
+    });
+  }
 
   // Custom Events
   // -------------
@@ -492,12 +498,7 @@
         try {
           call.call(target.callback, hasKey(target, "context") && target.context || this, event);
         } catch (exception) {
-          error = exception;
-          // Re-throw exceptions asynchronously, allowing all subsequent
-          // callbacks to fire.
-          defer(function () {
-            throw error;
-          });
+          rethrow(exception);
         }
       }
     }
@@ -508,15 +509,12 @@
         try {
           call.call(all.callback, hasKey(all, "context") && all.context || this, event);
         } catch (exception) {
-          error = exception;
-          defer(function () {
-            throw error;
-          });
+          rethrow(exception);
         }
       }
     }
     return this;
-  };
+  }
 
   // Suites
   // ------
@@ -560,14 +558,14 @@
       this[index] = value;
     }
     return this;
-  };
+  }
 
   // Adds a test to the suite. The test name is optional.
   Suite.prototype.addTest = addTest;
   function addTest(name, test) {
     this.push(new Test(name, test));
     return this;
-  };
+  }
 
   // Returns the index of the next available test relative to the given
   // `position`, or `null` if no additional tests are available.
@@ -585,7 +583,7 @@
       }
     }
     return null;
-  };
+  }
 
   // An event handler invoked each time a test in the suite emits an event.
   // This event handler updates the suite summary and prepares to run the next
@@ -635,7 +633,7 @@
       this.emit("complete");
     }
     return this;
-  };
+  }
 
   // Tests
   // -----
@@ -689,7 +687,7 @@
           });
         }
     }
-  };
+  }
 
   // **assert** creates a new assertion method with the given `name`. If the
   // provided `callback` function returns a falsy value, the assertion fails.
@@ -703,7 +701,7 @@
       });
     }
     return assertion;
-  };
+  }
 
   // Runs the test.
   Test.prototype.run = runTest;
@@ -712,7 +710,7 @@
     // Pass the wrapper as the first argument to the test function.
     this.test(this);
     return this;
-  };
+  }
 
   // **ok** tests whether an `expression` is truthy. The optional `message`
   // defaults to the name of the current assertion (e.g., `ok`).
@@ -728,13 +726,13 @@
     // Note: To test for the boolean `true`, use the `strictEqual` assertion.
     event.type = expression ? "assertion" : "failure";
     return this.emit(event);
-  };
+  }
 
   // **notOk** tests whether an `expression` is falsy.
   Test.prototype.notOk = notOk;
   function notOk(expression, message) {
     return this.ok(!expression, message == null ? "notOk" : message);
-  };
+  }
 
   // **equal** tests whether `actual` is **equal** to `expected`, as determined
   // by the `==` operator.
@@ -786,7 +784,7 @@
       ok = expected == null || (isFunction && call.call(expected, this, exception, this));
     }
     return this.ok(ok, message == null ? "error" : message);
-  };
+  }
 
   // Ensures that the `callback` function does not throw any exceptions.
   Test.prototype.noError = assertNoError;
@@ -798,7 +796,7 @@
       ok = false;
     }
     return this.ok(ok, message == null ? "noError" : message);
-  };
+  }
 
   // **done** completes a test with an optional number of expected `assertions`.
   // This method **must** be called at the end of each test.
@@ -808,6 +806,6 @@
       "type": "teardown",
       "expected": assertions
     });
-  };
+  }
   return exports;
 });

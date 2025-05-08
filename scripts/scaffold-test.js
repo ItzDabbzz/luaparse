@@ -1,17 +1,13 @@
 #!/usr/bin/env node
-/*jshint node:true*/
-/*globals console:true */
-'use strict';
 
-var fs = require('fs')
-  , luaparse = require('../')
-  , indent = '  '
-  , verbose = true
-  , testName
-  , snippets = []
-  // A list of notifications to display at the end of the scaffolding
-  , notifications = []
-  , intro = [
+const fs = require('node:fs');
+const luaparse = require('../luaparse');
+const indent = '  ';
+let verbose = true;
+let testName;
+const snippets = [];
+const notifications = [];
+const intro = [
       "(function (root, name, factory) {"
     , "  'use strict';"
     , ""
@@ -31,8 +27,8 @@ var fs = require('fs')
     , ""
     , "  exports.name = '%NAME%';"
     , "  exports.spec = "
-  ].join('\n')
-  , outro = [
+  ].join('\n');
+  const outro = [
       ";"
     , "}));"
   ].join('\n');
@@ -42,8 +38,8 @@ var fs = require('fs')
 // the tests as objects.
 function scaffoldFile() {
   // Scaffold the test
-  var expected = JSON.stringify(scaffoldTest(), null, indent)
-    , firstline;
+  let expected = JSON.stringify(scaffoldTest(), null, indent);
+  let firstline;
   if (!testName) return expected;
 
   // The frist line should not be indented so we separate it from the result.
@@ -52,26 +48,25 @@ function scaffoldFile() {
   expected = expected.join('\n');
 
   /* silence lint warnings */
-  expected = expected.replace(/[\x7f-\x9f]/g, function (c) {
-    return '\\u00' + c.charCodeAt(0).toString(16);
-  });
+  expected = expected.replace(/[\x7f-\x9f]/g, (c) => '\\u00' + c.charCodeAt(0).toString(16));
 
-  return intro.replace(/%NAME%/g, testName) +
-    firstline + '\n' +
-    expected.replace(/^([\s\S])/gm, indent + "$1") +
-    outro;
+  return `${intro.replace(/%NAME%/g, testName) +
+    firstline}\n${expected.replace(/^([\s\S])/gm, `${indent}$1`)}${outro}`;
 }
 
 // Scaffold the test
 function scaffoldTest() {
-  var output = [];
-  var defaultOptions = { comments: true, locations: true, ranges: true, scope: true };
-  var options = defaultOptions;
+  const output = [];
+  const defaultOptions = { comments: true, locations: true, ranges: true, scope: true };
+  let options = defaultOptions;
 
   // Iterate over all snippets and generate their tests.
-  snippets.forEach(function(snippet) {
+  // biome-ignore lint/complexity/noForEach: <explanation>
+    snippets.forEach((snippet) => {
     // Lines containing ^//{...}$ are luaparse options, use them.
-    if (result = /^\/\/\s*(\{[\s\S]+\})\s*$/.exec(snippet)) {
+    // biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
+        // biome-ignore lint/correctness/noInvalidUseBeforeDeclaration: <explanation>
+                if (result = /^\/\/\s*(\{[\s\S]+\})\s*$/.exec(snippet)) {
       options = Object.assign({}, options, JSON.parse(result[1]), defaultOptions);
       return;
     }
@@ -79,15 +74,13 @@ function scaffoldTest() {
     if (/^\/\//.test(snippet)) return;
 
     // Interpret "@@" escapes.
-    snippet = snippet.replace(/@(.)@/g, function (m, s) {
-      return ({ 'n': '\n'
+    snippet = snippet.replace(/@(.)@/g, (_m, s) => ({ 'n': '\n'
               , 'r': '\r'
               , 't': '\t'
               , 'f': '\f'
               , 'v': '\v'
               , 'b': '\b'
-              })[s] || s;
-    });
+              })[s] || s);
 
     // Generate the assertion.
     var result = scaffoldTestAssertion(snippet, options);
@@ -98,7 +91,7 @@ function scaffoldTest() {
     // error.
     snippet = snippet.replace(/\s*-- FAIL\s*$/, '');
 
-    var testcase = {
+    const testcase = {
       source: snippet,
       result: result
     };
@@ -113,16 +106,16 @@ function scaffoldTest() {
 
 // Scaffold a test case.
 function scaffoldTestAssertion(snippet, options) {
-  var name = snippet // Store the original name with the FAIL flag.
-    , expected
-    , success = true;
+  const name = snippet; // Store the original name with the FAIL flag.;
+  let expected;
+  let success = true;
 
   if (/-- FAIL\s*$/.test(snippet)) {
     snippet = snippet.replace(/\s*-- FAIL\s*$/, '');
     try {
       luaparse.parse(snippet, options);
       // For some reason it didnt throw a error.
-      notifications.push('\x1B[33mExpected failure: \x1B[0m' + name);
+      notifications.push(`\x1B[33mExpected failure: \x1B[0m${name}`);
     } catch (exception) {
       if (!(exception instanceof luaparse.SyntaxError))
         throw exception;
@@ -134,7 +127,7 @@ function scaffoldTestAssertion(snippet, options) {
     } catch (exception) {
       if (!(exception instanceof luaparse.SyntaxError))
         throw exception;
-      notifications.push('\x1B[31m' + exception + ':\x1B[0m ' + name);
+      notifications.push(`\x1B[31m${exception}:\x1B[0m ${name}`);
       success = false;
     }
   }
@@ -146,7 +139,7 @@ function scaffoldTestAssertion(snippet, options) {
 
 // Main ---------------------------------------------------
 
-var args = process.argv.splice(2);
+const args = process.argv.splice(2);
 
 if (!args.length) {
   console.log([
@@ -161,8 +154,8 @@ if (!args.length) {
   return;
 }
 
-var previous;
-args.forEach(function(arg, index) {
+let previous;
+args.forEach((arg, _index) => {
   if (/^--ignore-errors/.test(arg)) return verbose = false;
 
   // Argument flags
@@ -177,9 +170,10 @@ args.forEach(function(arg, index) {
   }
   // File
   else {
+    // biome-ignore lint/complexity/noForEach: <explanation>
     fs.readFileSync(arg, 'utf8')
       .split("\n")
-      .forEach(function(snippet) {
+      .forEach((snippet) => {
         if (!snippet.length) return;
         snippets.push(snippet.replace(/\n$/, ''));
       });
@@ -191,7 +185,8 @@ console.log(scaffoldFile());
 
 if (verbose && notifications.length) {
   console.warn("\nNotices: \n-----------------------------");
-  notifications.forEach(function(notice) {
+  // biome-ignore lint/complexity/noForEach: <explanation>
+  notifications.forEach((notice) => {
     console.warn(notice);
   });
 }

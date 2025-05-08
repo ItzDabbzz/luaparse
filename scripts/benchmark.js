@@ -1,20 +1,19 @@
 #!/usr/bin/env node
-/*jshint node:true*/
-/*globals console:true */
-'use strict';
 
-var Benchmark = require('benchmark')
-  , luaparse = require('../')
-  , fs = require('fs')
-  , path = require('path')
-  , files = process.argv.slice(2)
-  , suites = {}
-  , suite = new Benchmark.Suite()
-  , verbose = false
-  , minSamples = 5
-  , minTime = 0;
+const Benchmark = require('benchmark');
+let luaparse = require('../luaparse');
+const fs = require('node:fs');
+const path = require('node:path');
+const files = process.argv.slice(2);
+const suites = {};
+const suite = new Benchmark.Suite();
+let verbose = false;
+let minSamples = 5;
+let minTime = 0;
 
-files.forEach(function(file) {
+// biome-ignore lint/complexity/noForEach: <explanation>
+files.forEach((file) => {
+  // biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
   if (/^-v|--verbose/.test(file)) return verbose = true;
   if (/^--samples=/.test(file)) {
     minSamples = file.replace(/^--samples=/, '');
@@ -39,29 +38,31 @@ if (!files.length || !Object.keys(suites).length) {
   process.exit(1);
 }
 
-Object.keys(suites).forEach(function(file) {
-  var source = suites[file]
-    , settingsSets = {
+// biome-ignore lint/complexity/noForEach: <explanation>
+Object.keys(suites).forEach((file) => {
+  const source = suites[file];
+  const settingsSets = {
       'defaults': { },
       'scope: true': { scope: true },
       'comments: false': { comments: false },
       'locations: true': { locations: true }
     };
 
-  Object.keys(settingsSets).forEach(function(set) {
-    suite.add(file + ' ' + set, function() {
+  // biome-ignore lint/complexity/noForEach: <explanation>
+  Object.keys(settingsSets).forEach((set) => {
+    suite.add(`${file} ${set}`, () => {
       luaparse.parse(source, settingsSets[set]);
     }, { minSamples: minSamples, minTime: minTime });
   });
 });
 
-suite.on('cycle', function(event) {
-  var stats = event.target.stats
-    , mean = (stats.mean * 1000).toFixed(4)
-    , variance = (stats.variance * 1000 * 1000).toFixed(4);
+suite.on('cycle', (event) => {
+  const stats = event.target.stats;
+  const mean = (stats.mean * 1000).toFixed(4);
+  const variance = (stats.variance * 1000 * 1000).toFixed(4);
 
-  if (verbose) console.log(String(event.target) + ' (' + mean + 'ms)');
-  else console.log(mean + '\t' + variance);
+  if (verbose) console.log(`${String(event.target)} (${mean}ms)`);
+  else console.log(`${mean}\t${variance}`);
 });
 suite.run();
 

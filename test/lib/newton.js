@@ -7,19 +7,24 @@
 
 ;(function (root, definition) {
   // Detect asynchronous module loaders and CommonJS environments.
-  var isLoader = typeof define == "function" && !!define.amd,
-  isModule = typeof require == "function" && typeof exports == "object" && exports && !isLoader,
+  var isLoader = typeof define == "function" && !!define.amd;
+  var isModule = typeof require == "function" && typeof exports == "object" && exports && !isLoader;
 
   // Weak object inferences for detecting browsers and JS engines.
-  isBrowser = "window" in root && root.window == root && typeof root.navigator != "undefined",
-  isEngine = !isBrowser && !isModule && typeof root.load == "function",
+  var isBrowser = "window" in root && root.window == root && typeof root.navigator != "undefined";
+  var isEngine = !isBrowser && !isModule && typeof root.load == "function";
 
-  Environment = {
+  var Environment = {
     "isLoader": isLoader,
     "isModule": isModule,
     "isBrowser": isBrowser,
-    "isEngine": isEngine
-  }, Spec, Newton;
+    "isEngine": isEngine,
+    "document": null
+  };
+
+  if (isBrowser) {
+    Environment.document = root.document;
+  }
 
   if (isLoader) {
     // Export the plugin for asynchronous module loaders.
@@ -30,19 +35,15 @@
     // Export for CommonJS environments.
     try {
       // Load Spec.
-      Spec = require("./spec");
+      var Spec = require("./spec");
     } catch (exception) {}
     definition(Environment, exports, Spec || {});
   } else {
     // Export for web browsers and JavaScript engines.
-    if (isBrowser) {
-      Environment.document = root.document;
-    }
-    Newton = definition(Environment, (root.Newton = {
+    var Newton = definition(Environment, (root.Newton = {
       "noConflict": (function (original) {
         function noConflict() {
           root.Newton = original;
-          delete Newton.noConflict;
           return Newton;
         }
         return noConflict;
@@ -373,10 +374,10 @@
           print(substitute("    Actual: %o",  event.actual));
           break;
         case "complete":
-          print(substitute('# tests %d', testNumber));
-          print(substitute('# pass %d', this.assertions));
-          print(substitute('# fail %d', this.failures));
-          print(substitute('%d..%d', 1, this.assertions + this.failures));
+          print(substitute("# tests %d", testNumber));
+          print(substitute("# pass %d", this.assertions));
+          print(substitute("# fail %d", this.failures));
+          print(substitute("%d..%d", 1, this.assertions + this.failures));
           break;
       }
     }
@@ -457,7 +458,7 @@
           if (Spec.hasKey(properties, "style")) {
             Spec.forOwn(properties.style, function (property, value) {
               // Normalize the `float` style property.
-              element.style[1, (/(?:style|css)Float/).test(property) ? cssFloat : property] = value;
+              element.style[(1, (/(?:style|css)Float/).test(property) ? cssFloat : property)] = value;
             });
             delete properties.style;
           }

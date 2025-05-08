@@ -177,7 +177,7 @@
      * @type Boolean
      */
     support.charByOwnIndex =
-      // Rhino, RingoJS, IE 8, and Opera < 10.52 support indexes on
+      // Narwhal, Rhino, RingoJS, IE 8, and Opera < 10.52 support indexes on
       // strings but don't detect them as own properties
       support.charByIndex && hasKey('x', '0');
 
@@ -539,7 +539,7 @@
    * without incrimenting the other values's indexes.
    * https://github.com/documentcloud/underscore/issues/9
    *
-   * Rhino and environments it powers, like RingoJS, may have
+   * Rhino and environments it powers, like Narwhal and RingoJS, may have
    * buggy Array `concat()`, `reverse()`, `shift()`, `slice()`, `splice()` and
    * `unshift()` functions that make sparse arrays non-sparse by assigning the
    * undefined indexes a value of undefined.
@@ -1327,7 +1327,7 @@
           }
         }
         // continue clone if `value` doesn't have an accessor descriptor
-        // http://es5.github.io/#x8.10.1
+        // http://es5.github.com/#x8.10.1
         if (clone && clone != value &&
             !(descriptor = source && support.descriptors && getDescriptor(source, key),
               accessor = descriptor && (descriptor.get || descriptor.set))) {
@@ -3899,7 +3899,7 @@
     if (typeof module == 'object' && module && module.exports == freeExports) {
       (module.exports = Benchmark).Benchmark = Benchmark;
     }
-    // in RingoJS v0.7.0-
+    // in Narwhal or RingoJS v0.7.0-
     else {
       freeExports.Benchmark = Benchmark;
     }

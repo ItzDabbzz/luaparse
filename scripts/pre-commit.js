@@ -1,18 +1,16 @@
 #!/usr/bin/env node
-/*jshint node:true*/
-'use strict';
 
-var spawn = require('child_process').spawn;
+const spawn = require('node:child_process').spawn;
 
 run('npm run-script quality-assurance');
 
 function run(args) {
   args = args.split(' ');
-  var cmd = args.shift();
-  var ch = spawn(cmd, args);
+  const cmd = args.shift();
+  const ch = spawn(cmd, args);
   ch.stdout.pipe(process.stdout);
   ch.stderr.pipe(process.stderr);
-  ch.on('exit', function (code) {
+  ch.on('exit', (code) => {
     if (code) process.exit(code);
     ch.emit('next');
   });

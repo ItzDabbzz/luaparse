@@ -18,6 +18,6 @@
   "loopfunc": false,
   "esversion": "8",
   "predef": [
-    "exports", "require", "define", "global", "module", "console", "performance"
+    "exports", "require", "define", "global", "module", "console", "performance", "alert", "fetch"
   ]
 }

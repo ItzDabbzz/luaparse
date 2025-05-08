@@ -43,6 +43,12 @@ interface ParseOptions {
      * See the Encoding modes section https://github.com/fstirlitz/luaparse#encoding-modes for more information.
      */
     encodingMode: "none" | "pseudo-latin1" | "x-user-defined";
+
+    /**
+     * Debug logs the parser's internal state to the console.
+     * This is useful for debugging the parser itself, but may be useful for debugging your code as well.
+     */
+    debug: boolean;
 }
 interface ParseResult {
     globals: any[];

@@ -31,7 +31,7 @@
         require({
           // Thwart aggressive resource caching.
           'urlArgs': 'async=' + (+new Date())
-        }, ['../luaparse'], function (luaparse) {
+        }, ['../dist/luaparse'], function (luaparse) {
           // Remember whether luaparse exposed a global.
           var notExposed = typeof root.luaparse === 'undefined';
           // The runner relies on the global.
@@ -48,7 +48,7 @@
           });
         });
       } else {
-        root.document.write('<script src="../luaparse.js"><\/script>');
+        root.document.write('<script src="../dist/luaparse.js"><\/script>');
         root.document.write('<script src="runner.js"><\/script>');
       }
     }(this));

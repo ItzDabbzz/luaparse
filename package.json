@@ -1,7 +1,7 @@
 {
-  "name": "luaparse-fivem-dev",
-  "version": "0.3.3",
-  "description": "A Lua parser in JavaScript - Fixed by ItzDabbzz -  Modified by Sh4dow#8080",
+  "name": "luaparse",
+  "version": "0.3.4",
+  "description": "A Lua parser in JavaScript - Modified by ItzDabbzz -  Modified by Sh4dow#8080",
   "keywords": [
     "ast",
     "lua",
@@ -11,7 +11,7 @@
   "homepage": "https://fstirlitz.github.io/luaparse/",
   "bugs": "https://github.com/ItzDabbzz/luaparse/issues",
   "license": "MIT",
-  "author": "Oskar Schöldström <public@oxy.fi> (http://www.oxy.fi/) |  Modified by Sh4dow#8080 | Fixed By ItzDabbzz",
+  "author": "Oskar Schöldström <public@oxy.fi> (http://www.oxy.fi/) |  Modified by Sh4dow#8080 | Modified By ItzDabbzz",
   "files": [
     "README.md",
     "LICENSE",
@@ -56,11 +56,5 @@
     "testem": "^3.6.0",
     "through2": "^4.0.2",
     "typescript": "^5.7.3"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@biomejs/biome",
-      "es5-ext"
-    ]
   }
 }
